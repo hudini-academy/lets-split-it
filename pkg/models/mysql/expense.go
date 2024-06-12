@@ -46,4 +46,3 @@ func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []stri
 	}
 	return nil
 }
-C:\Users\EricsAntony\Documents\hudini-codebase\expenseTracker\cmd\app\handler.go
