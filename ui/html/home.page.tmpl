@@ -1,0 +1,27 @@
+{{template "base" .}}
+{{define "title"}}HOME{{end}}
+{{define "body"}}
+ 
+<div style="position: fixed; top: 10px; right: 10px;">
+    <button onclick="location.href='submit_expense'">Create Split</button>
+</div>
+<div style="position: fixed; top: 10px; right: 160px;">
+    <button onclick="location.href='/logout'">Logout</button>
+</div>
+{{if eq .UserId 1}}
+<div style="position: fixed; top: 10px; right: 100px;">
+    <button onclick="location.href='/allusers'">Users</button>
+</div>
+{{end}}
+ 
+<div style="display: flex; justify-content: space-between; margin-top: 50px;">
+    <div style="width: 45%;">
+        <h2>Your Splits</h2>
+       
+    </div>
+ 
+    <div style="width: 45%;">
+        <h2>Pending payments</h2>
+    </div>
+</div>
+{{end}}

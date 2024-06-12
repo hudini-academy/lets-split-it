@@ -1,0 +1,19 @@
+{{template "base" .}}
+{{define "title"}}All Users{{end}}
+{{define "body"}}
+ 
+<div style="position: fixed; top: 10px; right: 10px;">
+    <button onclick="location.href='/adduser'">Add user</button>
+</div>
+ 
+<div style="display: flex; justify-content: space-between; margin-top: 50px;">
+    <div style="width: 45%;">
+        <h2>USERS</h2>
+        <!-- List to display users from the database -->
+        {{range .UserList}}
+            <li>{{.Name}} - {{.Email}}</li>
+            <button onclick="location.href='/deleteuser?userId={{.UserID}}'">Delete</button>
+        {{end}}
+    </div>
+</div>
+{{end}}

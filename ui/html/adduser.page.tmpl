@@ -1,0 +1,22 @@
+{{template "base" .}}
+{{define "title"}}Add User{{end}}
+{{define "body"}}
+ 
+<form action='/adduser' method='POST' novalidate>
+    <div>
+        <label>Username:</label>
+        <input type='text' name='username'>
+    </div>
+    <div>
+        <label>Email:</label>
+        <input type='email' name='email'>
+    </div>
+    <div>
+        <label>Password:</label>
+        <input type='password' name='password'>
+    </div>
+    <div>
+        <input type='submit' value='Add user'>
+    </div>
+</form>
+{{end}}
