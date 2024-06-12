@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"expense/pkg/models"
 	"log"
 	"math"
 	"strconv"
@@ -45,4 +46,31 @@ func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []stri
 
 	}
 	return nil
+}
+
+func (m *SplitModel) GetYourSplit(userId int)([]*models.Expense, error) {
+	stmt := ` SELECT * FROM expense WHERE userId = ? `
+	log.Println(userId)
+
+	rows, err := m.DB.Query(stmt,userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	sliceYourSplit := []*models.Expense{}
+	for rows.Next() {
+		s := &models.Expense{}
+		err = rows.Scan(&s.ExpenseId,&s.Note,&s.Amount, &s.Date, &s.UserId,&s.Status)
+		log.Println("inside scan")
+		if err != nil {
+			return nil, err
+		}
+		sliceYourSplit = append(sliceYourSplit, s)
+		log.Println(sliceYourSplit)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return sliceYourSplit, nil
+
 }

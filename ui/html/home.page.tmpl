@@ -14,11 +14,27 @@
 </div>
 {{end}}
  
-<div style="display: flex; justify-content: space-between; margin-top: 50px;">
-    <div style="width: 45%;">
-        <h2>Your Splits</h2>
-       
-    </div>
+<div style="width: 45%;">
+<h2>Your Splits</h2>
+<table border="1">
+<tr>
+<th>Expense ID</th>
+<th>Note</th>
+<th>Amount</th>
+<th>Date</th>
+<th>Status</th>
+</tr>
+            {{range .YourSplit}}
+<tr>
+<td>{{.ExpenseId}}</td>
+<td>{{.Note}}</td>
+<td>{{.Amount}}</td>
+<td>{{.Date}}</td>
+<td>{{if eq .Status 0}}Pending{{else}}Paid{{end}}</td>
+</tr>
+            {{end}}
+</table>
+</div>
  
     <div style="width: 45%;">
         <h2>Pending payments</h2>

@@ -13,9 +13,17 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 		"ui/html/home.page.tmpl",
 		"ui/html/base.layout.tmpl",
 	}
+	s, err := app.Expense.GetYourSplit(app.Session.GetInt(r, "userId"))
+	if err != nil {
+		app.ErrorLog.Println()
+		log.Println(err)
+	}
+
 	app.render(w, files, &templateData{
-		UserId: app.Session.GetInt(r, "userId"),
+		UserId:    app.Session.GetInt(r, "userId"),
+		YourSplit: s,
 	})
+
 }
 
 // Login shows the logins page.

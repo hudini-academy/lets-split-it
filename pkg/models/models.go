@@ -25,6 +25,7 @@ type Expense struct {
 	Note      string
 	Amount    float64
 	Date      time.Time
+	Status    int
 }
 
 type Split struct {
