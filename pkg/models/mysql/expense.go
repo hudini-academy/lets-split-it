@@ -60,7 +60,7 @@ func (m *SplitModel) GetYourSplit(userId int)([]*models.Expense, error) {
 	sliceYourSplit := []*models.Expense{}
 	for rows.Next() {
 		s := &models.Expense{}
-		err = rows.Scan(&s.ExpenseId,&s.Note,&s.Amount, &s.Date, &s.UserId,&s.Status)
+		err = rows.Scan(&s.ExpenseId,&s.UserId,&s.Note, &s.Amount, &s.Date, &s.Status)
 		log.Println("inside scan")
 		if err != nil {
 			return nil, err
@@ -72,5 +72,4 @@ func (m *SplitModel) GetYourSplit(userId int)([]*models.Expense, error) {
 		return nil, err
 	}
 	return sliceYourSplit, nil
-
 }

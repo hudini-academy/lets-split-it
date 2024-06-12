@@ -18,7 +18,7 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 		app.ErrorLog.Println()
 		log.Println(err)
 	}
-
+	log.Println(s)
 	app.render(w, files, &templateData{
 		UserId:    app.Session.GetInt(r, "userId"),
 		YourSplit: s,
