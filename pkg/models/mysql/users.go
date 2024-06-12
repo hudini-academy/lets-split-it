@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"expense/pkg/models"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,6 +22,16 @@ func (m *UserModel) InsertUser(name, email, password string) error {
 		return Inserterr
 	}
 	return nil
+}
+
+func (m *UserModel) CheckEmail(email string) (bool, error) {
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM user WHERE email = ?)"
+	err := m.DB.QueryRow(query, email).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 // Authenticate function checks if the user is in the datavase and returns the id of the user.
