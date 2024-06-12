@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 )
 
 // Home page for the application.
@@ -24,18 +27,22 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 		"ui/html/login.page.tmpl",
 		"ui/html/base.layout.tmpl",
 	}
-	app.render(w, files, nil)
+	app.render(w, files, &templateData{
+		Flash: app.Session.PopString(r, "flash"),
+	})
 }
 
 // Login the user after authentication.
 func (app *Application) LoginUser(w http.ResponseWriter, r *http.Request) {
-	user := r.FormValue("username")
+	user := r.FormValue("email")
 	password := r.FormValue("password")
 
 	id, errAuth := app.User.Autenticate(user, password)
 	if errAuth != nil {
+		app.Session.Put(r, "flash", "Email or Password is incorrect")
 		app.ErrorLog.Println(errAuth)
 		log.Println(errAuth)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	app.Session.Put(r, "userId", id)
@@ -48,7 +55,9 @@ func (app *Application) AddUserform(w http.ResponseWriter, r *http.Request) {
 		"ui/html/adduser.page.tmpl",
 		"ui/html/base.layout.tmpl",
 	}
-	app.render(w, files, nil)
+	app.render(w, files, &templateData{
+		Flash: app.Session.PopString(r, "flash"),
+	})
 }
 
 // AddUser adds a new user to the database.
@@ -57,13 +66,68 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
+	if app.Validate(r, name, "name") || app.Validate(r, email, "email") || app.Validate(r, password, "password") {
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		return
+	}
+
+	if !app.isValidEmail(r, email) {
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		return
+	}
+
 	err := app.User.InsertUser(name, email, password)
 	if err != nil {
 		app.ErrorLog.Println(err.Error())
-		log.Println("AddUser(): ", err)
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+}
+
+func (app *Application) isValidEmail(r *http.Request, email string) bool {
+	regex := `^[a-zA-Z0-9._%+-]+@(gmail|yahoo)\.com$`
+	if regexp.MustCompile(regex).MatchString(email) {
+		exists, err := app.User.CheckEmail(email)
+		if err != nil {
+			app.ErrorLog.Println(err)
+			app.Session.Put(r, "flash", "An error occurred while checking the email")
+			return false
+		}
+		if exists {
+			app.Session.Put(r, "flash", "The email already exists")
+			return false
+		}
+		app.Session.Put(r, "flash", "User Successfully created")
+		return true
+	}
+	app.Session.Put(r, "flash", "The email is not valid")
+	return false
+}
+
+func (app *Application) Validate(r *http.Request, field string, fieldType string) bool {
+	switch fieldType {
+	case "name":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The name field is blank!")
+			return true
+		} else if utf8.RuneCountInString(field) > 100 {
+			app.Session.Put(r, "flash", "The name field is too long (maximum is 100 characters)!")
+			return true
+		}
+	case "email":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The email field is blank!")
+			return true
+		}
+	case "password":
+		if utf8.RuneCountInString(field) < 8 {
+			app.Session.Put(r, "flash", "The password is too short (minimum is 8 characters)!")
+			return true
+		}
+	}
+	return false
 }
 
 // Logout functionality.
@@ -105,15 +169,19 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 	}
 	note := r.FormValue("note")
 
+	usersSelected := r.Form["user[]"]
+
+	if len(usersSelected) == 0 {
+		app.Session.Put(r, "flash", "No users selected!")
+		return
+	}
+
 	result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"))
-	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 	if err != nil {
 		app.ErrorLog.Fatal()
 		return
 	}
 	app.Session.Put(r, "flash", "Task successfully created!")
-
-	usersSelected := r.Form["user[]"]
 
 	fmt.Println("Ids selected:")
 	for _, id := range usersSelected {
@@ -125,6 +193,7 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("done.....")
 	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
+	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 
 }
 

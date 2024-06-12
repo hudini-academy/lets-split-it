@@ -1,7 +1,11 @@
 {{template "base" .}}
 {{define "title"}}Add User{{end}}
 {{define "body"}}
- 
+<div>
+    {{with .Flash}}
+        <div class="flash">{{.}}</div>
+    {{end}}
+</div>
 <form action='/adduser' method='POST' novalidate>
     <div>
         <label>Username:</label>
