@@ -2,17 +2,23 @@
 {{define "title"}}HOME{{end}}
 {{define "body"}}
  
-<div style="position: fixed; top: 10px; right: 10px;">
-    <button onclick="location.href='submit_expense'">Create Split</button>
+<div class="action-btns">
+    <div style="position: fixed; top: 10px;">
+        <h3>Hey, Let's Split...!</h3>
+    </div>
+    <div style="position: fixed; top: 10px; right: 10px;">
+        <button onclick="location.href='submit_expense'">Create Split</button>
+    </div>
+    <div style="position: fixed; top: 10px; right: 230px;">
+        <button onclick="location.href='/logout'">Logout</button>
+    </div>
+    {{if eq .UserId 1}}
+    <div style="position: fixed; top: 10px; right: 140px;">
+        <button onclick="location.href='/allusers'">Users</button>
+    </div>
+    {{end}}
 </div>
-<div style="position: fixed; top: 10px; right: 160px;">
-    <button onclick="location.href='/logout'">Logout</button>
-</div>
-{{if eq .UserId 1}}
-<div style="position: fixed; top: 10px; right: 100px;">
-    <button onclick="location.href='/allusers'">Users</button>
-</div>
-{{end}}
+
  
 <div style="display: flex; justify-content: space-between; margin-top: 50px;">
     <div style="width: 45%;">

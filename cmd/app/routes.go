@@ -20,8 +20,8 @@ func (app *Application) routes() http.Handler {
     mux.Get("/adduser", Auth.ThenFunc(app.AddUserform))
     mux.Post("/adduser", Auth.ThenFunc(app.AddUser))
 	mux.Get("/logout", Auth.ThenFunc(app.Logout))
-	mux.Get("/submit_expense",http.HandlerFunc(app.GetAddSplitForm))
-	mux.Post("/submit_expense",http.HandlerFunc(app.AddSplit))
+	mux.Get("/submit_expense",Auth.ThenFunc(app.GetAddSplitForm))
+	mux.Post("/submit_expense",Auth.ThenFunc(app.AddSplit))
 
 	fileServer := http.FileServer(http.Dir(app.Config.StaticDir)) // serve static files
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))  // strip static directory.
