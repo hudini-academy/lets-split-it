@@ -28,14 +28,19 @@
             {{range .YourSplit}}
             <a style="text-decoration: none; color: black;" class="split-link" href="/expense_details?expenseId={{.ExpenseId}}">
             <div class="split-box">
+            
                 <span class="split-amount">Rs: {{.Amount}}</span>
                 <span class="split-date">{{.Date}}</span>
                 <p class="split-note">Note: {{.Note}}</p>
-                <span class="split-status" style="background-color: {{if eq .Status 0}}#ffcc00{{else}}#4caf50{{end}};">
-                    {{if eq .Status 0}}Pending{{else}}Paid{{end}}
+                <span class="split-status" style="background-color: {{if eq .Status 0}}#ffcc00{{else if eq .Status 2}}grey{{else}}#4caf50{{end}};">
+                    {{if eq .Status 0}}Pending  {{else if eq .Status 2}}Cancelled{{else}}Paid{{end}}
                 </span>
+                </a>
+                {{if eq .Status 0}}
+                <button " onclick="location.href='/cancelexpense?expenseId={{.ExpenseId}}'" style="background-color: #ff5555; float : right; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Cancel</button>
+                {{end}}
             </div>
-            </a>
+            
             {{end}}
         </div>
 

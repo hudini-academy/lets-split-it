@@ -107,3 +107,28 @@ func (m *UserModel) GetAllUsers() ([]*models.User, error) {
 	}
 	return UsersinDB, nil
 }
+
+	//Delete will remove the user from the database
+	func (m *UserModel) Delete(id int) (bool, error) {
+		// Alternative SQL statement using LEFT JOIN without subquery
+		stmt := `DELETE user
+				 FROM user
+				 LEFT JOIN split ON user.userId = split.userId AND split.datePaid IS NULL
+				 WHERE user.userId = ? AND split.userId IS NULL;`
+		
+		// Execute the SQL statement
+		result, err := m.DB.Exec(stmt, id)
+		if err != nil {
+			return false, err
+		}
+		
+		// Check if any rows were affected
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		
+		// Return true if rows were affected, otherwise false
+		return rowsAffected > 0, nil
+	}
+	

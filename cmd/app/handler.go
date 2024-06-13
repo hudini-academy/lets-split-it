@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -165,68 +164,72 @@ func (app *Application) AllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	app.render(w, files, &templateData{
 		UserList: userlist,
+		Flash: app.Session.PopString(r, "flash"),
 	})
 }
 
 func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Error parsing form", http.StatusInternalServerError)
-		return
-	}
-
-	amount := r.FormValue("amount")
-	amountFloat, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		app.Session.Put(r, "flash", "Invalid amount!")
-		return
-	}
-	note := r.FormValue("note")
-
-	usersSelected := r.Form["user[]"]
-
-	if len(usersSelected) == 0 {
-		app.Session.Put(r, "flash", "No users selected!")
-		return
-	}
-
-	result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"))
-	if err != nil {
-		app.ErrorLog.Fatal()
-		return
-	}
-	app.Session.Put(r, "flash", "Task successfully created!")
-
-	fmt.Println("Ids selected:")
-	for _, id := range usersSelected {
-		fmt.Println(id)
-	}
-	expenseId, err := result.LastInsertId()
-	if err != nil {
-		app.ErrorLog.Fatal()
-	}
-	log.Println("done.....")
-	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
-	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
-
+    err := r.ParseForm()
+    if err != nil {
+        http.Error(w, "Error parsing form", http.StatusInternalServerError)
+        return
+    }
+ 
+    amount := r.FormValue("amount")
+    amountFloat, err := strconv.ParseFloat(amount, 64)
+    if err != nil {
+        app.Session.Put(r, "flash", "Invalid amount !")
+        http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+        return
+    }
+    note := r.FormValue("note")
+    title := r.FormValue("title")
+ 
+    if title == ""{
+        app.Session.Put(r, "flash", "Title Required !")
+        http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+        return
+    }
+ 
+    result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"), title)
+    http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+    if err != nil {
+        log.Println(err)
+        app.ErrorLog.Fatal()
+        return
+    }
+    app.Session.Put(r, "flash", "Task successfully created !")
+ 
+    usersSelected := r.Form["user[]"]
+ 
+    expenseId, err := result.LastInsertId()
+    if err != nil {
+        app.ErrorLog.Fatal()
+    }
+    app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
+    http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+ 
 }
+ 
 
 func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"ui/html/split.page.tmpl",
-		"ui/html/base.layout.tmpl",
-	}
-	userList, errGettingList := app.User.GetAllUsers()
-	if errGettingList != nil {
-		app.ErrorLog.Fatal()
-		return
-	}
-	app.render(w, files, &templateData{
-		UserData: userList,
-	})
-
+    files := []string{
+        "ui/html/split.page.tmpl",
+        "ui/html/base.layout.tmpl",
+    }
+    userList, errGettingList := app.User.GetAllUsers()
+    if errGettingList != nil {
+        app.ErrorLog.Fatal()
+        return
+    }
+    app.render(w, files, &templateData{
+        UserData: userList,
+        Flash: app.Session.PopString(r, "flash"),
+    })
+ 
 }
 
+	//ExpenseDetails display the details of indiviual expense  
 func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
 	expenseId, errConvert := strconv.Atoi(r.FormValue("expenseId"))
 	if errConvert!= nil {
@@ -250,4 +253,47 @@ func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
         UserId:    app.Session.GetInt(r, "userId"),
         ExpenseDetails: expenseDetails,
     })
+}
+
+	//DeleteUser is to delete the user already exists.
+	func (app *Application) DeleteUser(w http.ResponseWriter, r *http.Request) {
+		value, errConvert := strconv.Atoi(r.FormValue("userId"))
+		if errConvert != nil {
+			log.Println(errConvert)
+			return
+		}
+		successDeleted, err := app.User.Delete(value)
+		if successDeleted {
+			app.Session.Put(r,"Flash","User deleted successfully")
+		} else if !successDeleted && err == nil {
+			app.Session.Put(r,"Flash","User is involved in a pending split. Cannot delete the user.")
+		}
+		if err != nil {
+			app.ErrorLog.Println(err.Error())
+			app.Session.Put(r,"Flash","Testing.")
+			log.Println("DeleteUser(): ", err)
+			return
+		}
+		app.Session.Put(r,"Flash","Testing.")
+		// Redirecting to the all users page by using http.Redirect
+		http.Redirect(w, r, "/allusers", http.StatusSeeOther)
+	}
+
+//Cancelexpense is to cnacel the expense that created
+func (app *Application) Cancelexpense(w http.ResponseWriter, r *http.Request) {
+	value, errConvert := strconv.Atoi(r.FormValue("expenseId"))
+	if errConvert != nil {
+		log.Println(errConvert)
+		return
+	}	
+
+	err := app.Expense.Cancelupdate(value)
+	if err != nil {
+		app.ErrorLog.Println(err.Error())
+		log.Println("Cancelexpense(): ", err)
+		return
+	}
+
+	// redirect to the home page
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

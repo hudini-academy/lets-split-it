@@ -24,6 +24,7 @@ type Expense struct {
 	ExpenseId int
 	UserId    int
 	Note      string
+	Title     string
 	Amount    float64
 	Date      time.Time
 	Status    int
