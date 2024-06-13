@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .expense-details {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #dddddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .main-amount h2 {
+            color: #333;
+        }
+        .note {
+            margin-top: 10px;
+            color: #666;
+        }
+        .dates p {
+            color: #666;
+        }
+        table {
+            width: 90%;
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        td {
+            background-color: #fff;
+        }
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        .status-to-be-paid {
+            background-color: red;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        .action-btns button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 30px;
+    }
+
+    .action-btns button:hover {
+        background-color: #0056b3;
+    }
+
+    </style>
+</head>
+<body>
+<div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
+    <div class="action-btns" style="float: left;">
+        <img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;">
+    </div>
+    <div class="action-btns" style="float: right;">
+        <button onclick="location.href='/'">Home</button>
+    </div>
+</div>
+<br><br><br><br><br>
+    <div class="expense-details">
+        <div class="main-amount">
+            <h2>Main Amount: {{.ExpenseDetails.Amount}}</h2>
+        </div>
+        <div class="note">Note: {{.ExpenseDetails.Note}}</div>
+        <div class="dates">
+            <p>Date Created: {{.ExpenseDetails.Date}}</p>
+        </div>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Split Amount</th>
+                <th>Paid On</th>
+                <th>Status</th>
+            </tr>
+            {{range .ExpenseDetails.SplitDetails}}
+            <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Amount}}</td>
+                <td>{{if eq .DatePaid.Valid true}}{{.DatePaid.Time}}{{end}}</td>
+                <td>
+                    {{if eq .DatePaid.Valid true}}<span class="status-paid">Paid</span>{{else}}<span class="status-to-be-paid">To be paid</span>{{end}}
+                </td>
+            </tr>
+            {{end}}
+        </table>
+    </div>
+</body>
+</html>

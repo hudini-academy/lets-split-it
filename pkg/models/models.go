@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 )
@@ -32,5 +33,15 @@ type Split struct {
 	ExpenseId int
 	UserId    int
 	Amount    float64
-	DatePaid  time.Time
+	DatePaid  sql.NullTime
+	Name      string
+}
+
+type ExpenseDetails struct {
+	ExpenseId    int
+	Amount       float64
+	Date         time.Time
+	Note         string
+	CreatedName  string
+	SplitDetails []*Split
 }

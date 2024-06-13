@@ -14,14 +14,20 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 		"ui/html/base.layout.tmpl",
 	}
 	s, err := app.Expense.GetYourSplit(app.Session.GetInt(r, "userId"))
+	involvedSplits, errInvolved := app.Expense.GetInvolvedSplits(app.Session.GetInt(r, "userId"))
+	if errInvolved!= nil {
+        app.ErrorLog.Println()
+        log.Println(errInvolved)
+    }
+
 	if err != nil {
 		app.ErrorLog.Println()
 		log.Println(err)
 	}
-	log.Println(s)
 	app.render(w, files, &templateData{
 		UserId:    app.Session.GetInt(r, "userId"),
 		YourSplit: s,
+		Involved:  involvedSplits,
 	})
 
 }
@@ -150,4 +156,29 @@ func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) 
 		UserData: userList,
 	})
 
+}
+
+func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
+	expenseId, errConvert := strconv.Atoi(r.FormValue("expenseId"))
+	if errConvert!= nil {
+        app.ErrorLog.Println(errConvert)
+        log.Println(errConvert)
+        return
+    }
+    expenseDetails, errDetails := app.Expense.ListExpensedetails(expenseId)
+    if errDetails != nil {
+        app.ErrorLog.Println()
+        log.Println("AllUsers(): ", errDetails)
+        return
+    }
+ 
+    files := []string{
+        "ui/html/expensedetails.page.tmpl",
+        "ui/html/base.layout.tmpl",
+    }
+ 
+    app.render(w, files, &templateData{
+        UserId:    app.Session.GetInt(r, "userId"),
+        ExpenseDetails: expenseDetails,
+    })
 }

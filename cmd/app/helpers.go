@@ -16,6 +16,8 @@ type templateData struct {
 	UserList []*models.User
 	UserData []*models.User
 	YourSplit []*models.Expense
+	Involved []*models.Expense
+	ExpenseDetails *models.ExpenseDetails
 }
 
 // LogFiles opens the log files and return them.
