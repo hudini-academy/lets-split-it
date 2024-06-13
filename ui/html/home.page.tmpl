@@ -1,47 +1,59 @@
 {{template "base" .}}
 {{define "title"}}HOME{{end}}
 {{define "body"}}
-<div class="action-btns">
-    <div style="position: fixed; top: 10px;">
-        <h3>Hey, Let's Split...!</h3>
+<div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
+    <div class="action-btns" style="float: left;">
+        <img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;">
     </div>
- 
-<div style="position: fixed; top: 10px; right: 10px;">
-    <button onclick="location.href='submit_expense'">Create Split</button>
+    <div class="action-btns" style="float: right;">
+        <button onclick="location.href='/logout'">Logout</button>
+    </div>
+    <div class="action-btns" style="float: right;">
+        <button onclick="location.href='submit_expense'">Create Split</button>
+    </div>
+    {{if eq .UserId 1}}
+    <div class="action-btns" style="float: right;">
+        <button onclick="location.href='/allusers'">Users</button>
+    </div>
+    {{end}}
+    <div style="clear: both;"></div>
 </div>
-<div style="position: fixed; top: 10px; right: 160px;">
-    <button onclick="location.href='/logout'">Logout</button>
-</div>
-{{if eq .UserId 1}}
-<div style="position: fixed; top: 10px; right: 100px;">
-    <button onclick="location.href='/allusers'">Users</button>
-</div>
-{{end}}
- 
-<div style="width: 45%;">
-<h2>Your Splits</h2>
-<table border="1">
-<tr>
-<th>Expense ID</th>
-<th>Note</th>
-<th>Amount</th>
-<th>Date</th>
-<th>Status</th>
-</tr>
+
+<br><br>
+
+<div style="margin-top: 30px;"> 
+    <div style="display: flex;">
+        <div style="width: 30%; padding: 50px;">
+            <h2>Your Splits</h2>
             {{range .YourSplit}}
-<tr>
-<td>{{.ExpenseId}}</td>
-<td>{{.Note}}</td>
-<td>{{.Amount}}</td>
-<td>{{.Date}}</td>
-<td>{{if eq .Status 0}}Pending{{else}}Paid{{end}}</td>
-</tr>
+            <a style="text-decoration: none; color: black;" class="split-link" href="/expense_details?expenseId={{.ExpenseId}}">
+            <div class="split-box">
+                <span class="split-amount">Rs: {{.Amount}}</span>
+                <span class="split-date">{{.Date}}</span>
+                <p class="split-note">Note: {{.Note}}</p>
+                <span class="split-status" style="background-color: {{if eq .Status 0}}#ffcc00{{else}}#4caf50{{end}};">
+                    {{if eq .Status 0}}Pending{{else}}Paid{{end}}
+                </span>
+            </div>
+            </a>
             {{end}}
-</table>
-</div>
- 
-    <div style="width: 45%;">
-        <h2>Pending payments</h2>
+        </div>
+
+        <div style="width: 50%; padding: 50px;">
+            <h2>Splits your attention needed</h2>
+            {{range .Involved}}
+            <a style="text-decoration: none; color: black;" class="split-link" href="/expense_details?expenseId={{.ExpenseId}}">
+            <div class="split-box">
+                <span class="split-amount">Rs: {{.Amount}}</span>
+                <span class="split-date">{{.Date}}</span>
+                <p class="split-note">Note: {{.Note}}</p>
+                <span class="split-status" style="background-color: {{if eq .Status 0}}#ffcc00{{else}}#4caf50{{end}};">
+                    {{if eq .Status 0}}Pending{{else}}Paid{{end}}
+                </span>
+            </div>
+            </a>
+            {{end}}
+        </div>
     </div>
 </div>
 {{end}}

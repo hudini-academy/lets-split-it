@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"time"
 )
 
 type SplitModel struct {
@@ -48,11 +49,10 @@ func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []stri
 	return nil
 }
 
-func (m *SplitModel) GetYourSplit(userId int)([]*models.Expense, error) {
+func (m *SplitModel) GetYourSplit(userId int) ([]*models.Expense, error) {
 	stmt := ` SELECT * FROM expense WHERE userId = ? `
-	log.Println(userId)
 
-	rows, err := m.DB.Query(stmt,userId)
+	rows, err := m.DB.Query(stmt, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,16 +60,77 @@ func (m *SplitModel) GetYourSplit(userId int)([]*models.Expense, error) {
 	sliceYourSplit := []*models.Expense{}
 	for rows.Next() {
 		s := &models.Expense{}
-		err = rows.Scan(&s.ExpenseId,&s.UserId,&s.Note, &s.Amount, &s.Date, &s.Status)
-		log.Println("inside scan")
+		err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Date, &s.Status)
 		if err != nil {
 			return nil, err
 		}
 		sliceYourSplit = append(sliceYourSplit, s)
-		log.Println(sliceYourSplit)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 	return sliceYourSplit, nil
+}
+
+// GetInvolvedSplits fetches the list of splits where the user have to pay.
+func (m *SplitModel) GetInvolvedSplits(userId int) ([]*models.Expense, error) {
+	var expenseDetails []*models.Expense
+	stmt := `SELECT expenseId FROM split WHERE userId = ? AND datePaid IS NULL`
+	rows, err := m.DB.Query(stmt, userId)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		stmt2 := `SELECT * FROM expense WHERE expenseId =?`
+		rows2 := m.DB.QueryRow(stmt2, id)
+		expense := &models.Expense{}
+		err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Date, &expense.Status)
+		if err != nil {
+			return nil, err
+		}
+		expenseDetails = append(expenseDetails, expense)
+	}
+	return expenseDetails, nil
+}
+
+// ListExpensedetails returns the details of that specified expense.
+func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, error) {
+	var totalAmount float64
+	var note string
+	var date time.Time
+	var name string
+
+	stmt := `SELECT amount, note, date, name FROM expense, user WHERE expenseId = ? AND expense.userId = user.userId`
+	rows := m.DB.QueryRow(stmt, expenseId)
+
+	rows.Scan(&totalAmount, &note, &date, &name)
+
+	stmt2 := `SELECT amount, datePaid, name, split.userId, expenseId from split, user WHERE split.userId = user.userId AND split.expenseId = ?`
+	rows2, err := m.DB.Query(stmt2, expenseId)
+	if err != nil {
+		return nil, err
+	}
+	var splitDetails []*models.Split
+	for rows2.Next() {
+		s := &models.Split{}
+		err = rows2.Scan(&s.Amount, &s.DatePaid, &s.Name, &s.UserId, &s.ExpenseId)
+		if err != nil {
+			return nil, err
+		}
+		splitDetails = append(splitDetails, s)
+	}
+	var expenseDetails *models.ExpenseDetails
+	expenseDetails = &models.ExpenseDetails{
+		Amount: totalAmount,
+        Note: note,
+        Date: date,
+        CreatedName: name,
+        SplitDetails: splitDetails,
+	}
+	return expenseDetails, nil
 }

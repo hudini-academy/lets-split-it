@@ -22,9 +22,11 @@ func (app *Application) routes() http.Handler {
 	mux.Get("/logout", Auth.ThenFunc(app.Logout))
 	mux.Get("/submit_expense",Auth.ThenFunc(app.GetAddSplitForm))
 	mux.Post("/submit_expense",Auth.ThenFunc(app.AddSplit))
+	mux.Get("/expense_details",Auth.ThenFunc(app.ExpenseDetails))
 
 	fileServer := http.FileServer(http.Dir(app.Config.StaticDir)) // serve static files
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))  // strip static directory.
+	mux.Get("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir("./ui/images"))))
 
 	return middlewareChain.Then(mux)
 }
