@@ -1,11 +1,8 @@
 {{template "base" .}}
 {{define "title"}}Add User{{end}}
+{{define "header"}}
+{{end}}
 {{define "body"}}
-<div>
-    {{with .Flash}}
-        <div class="flash">{{.}}</div>
-    {{end}}
-</div>
  
 <style>
 
@@ -38,6 +35,11 @@
     <div>
         <input type='submit' value='Add'>
     </div>
+    <div>
+    {{if .Flash}}
+        <div class="flash">{{.}}</div>
+    {{end}}
+</div>
 </form>
 
 {{end}}

@@ -13,12 +13,12 @@ type SplitModel struct {
 	DB *sql.DB
 }
 
-func (m *SplitModel) Insert(note string, amount float64, userId int) (sql.Result, error) {
+func (m *SplitModel) Insert(note string, amount float64, userId int, title string) (sql.Result, error) {
 
-	stmt := `INSERT INTO expense (note, amount,userId,date)
-				VALUES(?,?,?,utc_timestamp())`
+	stmt := `INSERT INTO expense (note, amount,userId,date, title)
+                VALUES(?,?,?,utc_timestamp(), ?)`
 
-	result, err := m.DB.Exec(stmt, note, amount, userId)
+	result, err := m.DB.Exec(stmt, note, amount, userId, title)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (m *SplitModel) GetYourSplit(userId int) ([]*models.Expense, error) {
 	sliceYourSplit := []*models.Expense{}
 	for rows.Next() {
 		s := &models.Expense{}
-		err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Date, &s.Status)
+		err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Title, &s.Date, &s.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +89,7 @@ func (m *SplitModel) GetInvolvedSplits(userId int) ([]*models.Expense, error) {
 		stmt2 := `SELECT * FROM expense WHERE expenseId =?`
 		rows2 := m.DB.QueryRow(stmt2, id)
 		expense := &models.Expense{}
-		err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Date, &expense.Status)
+		err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Title, &expense.Date, &expense.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -126,11 +126,11 @@ func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, 
 	}
 	var expenseDetails *models.ExpenseDetails
 	expenseDetails = &models.ExpenseDetails{
-		Amount: totalAmount,
-        Note: note,
-        Date: date,
-        CreatedName: name,
-        SplitDetails: splitDetails,
+		Amount:       totalAmount,
+		Note:         note,
+		Date:         date,
+		CreatedName:  name,
+		SplitDetails: splitDetails,
 	}
 	return expenseDetails, nil
 }

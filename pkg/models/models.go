@@ -21,12 +21,13 @@ type User struct {
 }
 
 type Expense struct {
-	ExpenseId int
-	UserId    int
-	Note      string
-	Amount    float64
-	Date      time.Time
-	Status    int
+    ExpenseId int
+    UserId    int
+    Note      string
+    Amount    float64
+    Title     string
+    Date      time.Time
+    Status    int
 }
 
 type Split struct {
