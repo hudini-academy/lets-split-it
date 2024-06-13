@@ -34,6 +34,16 @@ func (m *UserModel) CheckEmail(email string) (bool, error) {
 	return exists, nil
 }
 
+func (m *UserModel) CheckUser(name string) (bool, error) {
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM user WHERE name = ?)"
+	err := m.DB.QueryRow(query, name).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 // Authenticate function checks if the user is in the datavase and returns the id of the user.
 func (u *UserModel) Autenticate(username, password string) (int, error) {
 	var id int

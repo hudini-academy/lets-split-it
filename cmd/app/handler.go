@@ -85,6 +85,11 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !app.isValidUser(r, name) {
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		return
+	}
+
 	if !app.isValidEmail(r, email) {
 		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
 		return
@@ -98,6 +103,20 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+}
+
+func(app *Application) isValidUser(r *http.Request, name string) bool{
+	exists, err := app.User.CheckUser(name)
+		if err != nil {
+			app.ErrorLog.Println(err)
+			app.Session.Put(r, "flash", "An error occurred while checking the email")
+			return false
+		}
+		if exists {
+			app.Session.Put(r, "flash", "The name already exists")
+			return false
+		}
+		return true
 }
 
 func (app *Application) isValidEmail(r *http.Request, email string) bool {

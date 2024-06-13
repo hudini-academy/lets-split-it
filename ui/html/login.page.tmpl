@@ -1,11 +1,6 @@
 {{template "base" .}}
 {{define "title"}}Login{{end}}
 {{define "body"}}
-<div>
-    {{with .Flash}}
-        <div class="flash">{{.}}</div>
-    {{end}}
-</div>
 <form action='/login' method='POST' novalidate>
     <div>
         <label style="display: block; margin-bottom: 5px; font-size: 12px">Email:</label>
@@ -18,5 +13,10 @@
     <div>
         <input type='submit' value='Login'>
     </div>
+    <div>
+    {{with .Flash}}
+        <div class="flash">{{.}}</div>
+    {{end}}
+</div>
 </form>
 {{end}}
