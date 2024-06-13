@@ -1,21 +1,15 @@
 {{template "base" .}}
 {{define "title"}}Add User{{end}}
 {{define "header"}}
+<div class="action-btns" style="float: right;">
+        <button onclick="location.href='/logout'">Logout</button>
+    </div>
 {{end}}
 {{define "body"}}
  
 <style>
 
 </style>
-
-<div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
-    <div class="action-btns" style="float: left;">
-        <img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;">
-    </div>
-     <div class="action-btns" style="float: right;">
-        <button onclick="location.href='/'">Home</button>
-    </div>
-</div>
 <br><br><br><br><br><br>
 <h3 style="letter-spacing: 10px;">ADD USERS</h3>
 <br>
