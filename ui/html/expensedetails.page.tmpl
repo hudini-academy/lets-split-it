@@ -9,7 +9,7 @@
 <body>
 <br><br><br><br><br>
     <div class="expense-details">
-        <div class="main-amount">
+        <div class="main-amount"><a href="/markaspaid?expenseId={{.ExpenseDetails.ExpenseId}}"><button class="pay-button" style="float:right">Pay</button></a>
             <h2>Main Amount: {{.ExpenseDetails.Amount}}</h2>
         </div>
         <div class="note">Note: {{.ExpenseDetails.Note}}</div>

@@ -70,11 +70,14 @@
 <h3 style="letter-spacing: 10px;">CREATE A SPLIT</h3>
 <br>
 <form action="/submit_expense" method="POST">
+    <label for="amount">Title:</label>
+    <input type="text" id="title" name="title">
+    <br><br>
+    <label for="note">Description:</label>
+    <input type="text" id="note" name="note">
+    <br><br>
     <label for="amount">Amount:</label>
     <input type="text" id="amount" name="amount" required>
-    <br><br>
-    <label for="note">Note:</label>
-    <input type="text" id="note" name="note">
     <br><br>
     <label for="user">Select Users:</label>
     <br>
@@ -83,6 +86,9 @@
         <label for="user{{.UserID}}">{{.Name}}</label>
     {{end}}
     <br><br>
+    {{if .Flash}}
+    <label style="color: red;" for="amount">* {{.Flash}}</label>
+    {{end}}
     <input type="submit" value="Create" >
 </form>
 {{end}}

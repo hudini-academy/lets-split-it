@@ -124,8 +124,8 @@ func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, 
 		}
 		splitDetails = append(splitDetails, s)
 	}
-	var expenseDetails *models.ExpenseDetails
-	expenseDetails = &models.ExpenseDetails{
+	expenseDetails := &models.ExpenseDetails{
+		ExpenseId:    expenseId,
 		Amount:       totalAmount,
 		Note:         note,
 		Date:         date,
@@ -134,3 +134,69 @@ func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, 
 	}
 	return expenseDetails, nil
 }
+
+func (m *SplitModel) Mark(userId int, expenseId int) error {
+	log.Println(expenseId)
+    // Check the count of non-null values in datepaid
+    stmtCheckAllNull := `SELECT COUNT(*) FROM split WHERE expenseId = ? AND datepaid IS NOT NULL`
+    var nonNullCount int
+    err := m.DB.QueryRow(stmtCheckAllNull, expenseId).Scan(&nonNullCount)
+    if err != nil {
+        return err
+    }
+	log.Println("non-null values in datepaid")
+
+    // If all datepaid fields are NULL, set the status to 1
+    if nonNullCount == 0 {
+        stmtUpdateStatus := `UPDATE expense SET status = 1 WHERE expenseId = ?`
+        _, err = m.DB.Exec(stmtUpdateStatus, expenseId)
+        if err != nil {
+            return err
+        }
+    }
+	log.Println("set the status to 1")
+
+    // Update the datepaid of the corresponding user
+    stmtUpdate := `UPDATE split SET datepaid = UTC_TIMESTAMP() WHERE userId = ? AND expenseId = ?`
+    _, err = m.DB.Exec(stmtUpdate, userId, expenseId)
+    if err != nil {
+        return err
+    }
+	log.Println("Update the datepaid of the corresponding user")
+
+    // Check if all users in the expense have non-null datepaid
+    stmtCheck := `SELECT COUNT(*) FROM split WHERE expenseId = ? AND datepaid IS NULL`
+    var count int
+    err = m.DB.QueryRow(stmtCheck, expenseId).Scan(&count)
+    if err != nil {
+        return err
+    }
+
+    // If all users have a non-null datepaid, update the expense status to 2
+    if count == 0 {
+        stmtUpdateStatus := `UPDATE expense SET status = 2 WHERE expenseId = ?`
+        _, err = m.DB.Exec(stmtUpdateStatus, expenseId)
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
+func (m *SplitModel) CheckIfPaid(userId int, expenseId int) (bool, error) {
+    var datePaid sql.NullTime
+    stmt := `SELECT datepaid FROM split WHERE userId = ? AND expenseId = ?`
+    
+    err := m.DB.QueryRow(stmt, userId, expenseId).Scan(&datePaid)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return false, nil // no record found
+        }
+        return false, err
+    }
+    
+    // it means datepaid is not null
+    return datePaid.Valid, nil
+}
+
