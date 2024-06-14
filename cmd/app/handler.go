@@ -3,7 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 )
 
 // Home page for the application.
@@ -14,10 +17,10 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 	}
 	s, err := app.Expense.GetYourSplit(app.Session.GetInt(r, "userId"))
 	involvedSplits, errInvolved := app.Expense.GetInvolvedSplits(app.Session.GetInt(r, "userId"))
-	if errInvolved!= nil {
-        app.ErrorLog.Println()
-        log.Println(errInvolved)
-    }
+	if errInvolved != nil {
+		app.ErrorLog.Println()
+		log.Println(errInvolved)
+	}
 
 	if err != nil {
 		app.ErrorLog.Println()
@@ -37,18 +40,22 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 		"ui/html/login.page.tmpl",
 		"ui/html/base.layout.tmpl",
 	}
-	app.render(w, files, nil)
+	app.render(w, files, &templateData{
+		Flash: app.Session.PopString(r, "flash"),
+	})
 }
 
 // Login the user after authentication.
 func (app *Application) LoginUser(w http.ResponseWriter, r *http.Request) {
-	user := r.FormValue("username")
+	user := r.FormValue("email")
 	password := r.FormValue("password")
 
 	id, errAuth := app.User.Autenticate(user, password)
 	if errAuth != nil {
+		app.Session.Put(r, "flash", "Email or Password is incorrect")
 		app.ErrorLog.Println(errAuth)
 		log.Println(errAuth)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	app.Session.Put(r, "userId", id)
@@ -61,7 +68,9 @@ func (app *Application) AddUserform(w http.ResponseWriter, r *http.Request) {
 		"ui/html/adduser.page.tmpl",
 		"ui/html/base.layout.tmpl",
 	}
-	app.render(w, files, nil)
+	app.render(w, files, &templateData{
+		Flash: app.Session.PopString(r, "flash"),
+	})
 }
 
 // AddUser adds a new user to the database.
@@ -70,13 +79,68 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
+	if app.Validate(r, name, "name") || app.Validate(r, email, "email") || app.Validate(r, password, "password") {
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		return
+	}
+
+	if !app.isValidEmail(r, email) {
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		return
+	}
+
 	err := app.User.InsertUser(name, email, password)
 	if err != nil {
 		app.ErrorLog.Println(err.Error())
-		log.Println("AddUser(): ", err)
+		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+}
+
+func (app *Application) isValidEmail(r *http.Request, email string) bool {
+	regex := `^[a-zA-Z0-9._%+-]+@(gmail|yahoo)\.com$`
+	if regexp.MustCompile(regex).MatchString(email) {
+		exists, err := app.User.CheckEmail(email)
+		if err != nil {
+			app.ErrorLog.Println(err)
+			app.Session.Put(r, "flash", "An error occurred while checking the email")
+			return false
+		}
+		if exists {
+			app.Session.Put(r, "flash", "The email already exists")
+			return false
+		}
+		app.Session.Put(r, "flash", "User Successfully created")
+		return true
+	}
+	app.Session.Put(r, "flash", "The email is not valid")
+	return false
+}
+
+func (app *Application) Validate(r *http.Request, field string, fieldType string) bool {
+	switch fieldType {
+	case "name":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The name field is blank!")
+			return true
+		} else if utf8.RuneCountInString(field) > 100 {
+			app.Session.Put(r, "flash", "The name field is too long (maximum is 100 characters)!")
+			return true
+		}
+	case "email":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The email field is blank!")
+			return true
+		}
+	case "password":
+		if utf8.RuneCountInString(field) < 8 {
+			app.Session.Put(r, "flash", "The password is too short (minimum is 8 characters)!")
+			return true
+		}
+	}
+	return false
 }
 
 // Logout functionality.
@@ -100,6 +164,7 @@ func (app *Application) AllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	app.render(w, files, &templateData{
 		UserList: userlist,
+		Flash:    app.Session.PopString(r, "flash"),
 	})
 }
 
@@ -120,10 +185,10 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 	note := r.FormValue("note")
 	title := r.FormValue("title")
 
-	if title == ""{
+	if title == "" {
 		app.Session.Put(r, "flash", "Title Required !")
 		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
-        return
+		return
 	}
 
 	result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"), title)
@@ -142,7 +207,7 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 		app.ErrorLog.Fatal()
 	}
 	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
-	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 
 }
 
@@ -163,27 +228,96 @@ func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) 
 
 }
 
+// ExpenseDetails display the details of indiviual expense
 func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
 	expenseId, errConvert := strconv.Atoi(r.FormValue("expenseId"))
-	if errConvert!= nil {
-        app.ErrorLog.Println(errConvert)
-        log.Println(errConvert)
-        return
-    }
-    expenseDetails, errDetails := app.Expense.ListExpensedetails(expenseId)
-    if errDetails != nil {
-        app.ErrorLog.Println()
-        log.Println("AllUsers(): ", errDetails)
-        return
-    }
- 
-    files := []string{
-        "ui/html/expensedetails.page.tmpl",
-        "ui/html/base.layout.tmpl",
-    }
- 
-    app.render(w, files, &templateData{
-        UserId:    app.Session.GetInt(r, "userId"),
-        ExpenseDetails: expenseDetails,
-    })
+	if errConvert != nil {
+		app.ErrorLog.Println(errConvert)
+		log.Println(errConvert)
+		return
+	}
+	expenseDetails, errDetails := app.Expense.ListExpensedetails(expenseId)
+	if errDetails != nil {
+		app.ErrorLog.Println()
+		log.Println("AllUsers(): ", errDetails)
+		return
+	}
+
+	files := []string{
+		"ui/html/expensedetails.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
+	app.render(w, files, &templateData{
+		UserId:         app.Session.GetInt(r, "userId"),
+		ExpenseDetails: expenseDetails,
+		Flash: app.Session.PopString(r, "flash"),
+	})
+}
+
+func (app *Application) MarkAsPaid(w http.ResponseWriter, r *http.Request) {
+
+	expenseId := r.FormValue("expenseId")
+	intexpenseId, _ := strconv.Atoi(expenseId)
+	userId := app.Session.GetInt(r, "userId")
+	bool,err := app.Expense.CheckIfPaid(userId, intexpenseId)
+	if err != nil {
+		app.ErrorLog.Println()
+	}
+	if bool{
+		app.Session.Put(r, "flash", "You already Paid Biaaatch")
+		log.Println("You already Paid Biaaatch")
+		http.Redirect(w, r, fmt.Sprintf("/expense_details?expenseId=%d", intexpenseId), http.StatusSeeOther)
+		return
+		
+	}
+	err = app.Expense.Mark(userId, intexpenseId)
+	if err != nil {
+		app.ErrorLog.Println()
+	}
+	http.Redirect(w, r, fmt.Sprintf("/expense_details?expenseId=%d", intexpenseId), http.StatusSeeOther)
+
+}
+
+// DeleteUser is to delete the user already exists.
+func (app *Application) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	value, errConvert := strconv.Atoi(r.FormValue("userId"))
+	if errConvert != nil {
+		log.Println(errConvert)
+		return
+	}
+	successDeleted, err := app.User.Delete(value)
+	if successDeleted {
+		app.Session.Put(r, "Flash", "User deleted successfully")
+	} else if !successDeleted && err == nil {
+		app.Session.Put(r, "Flash", "User is involved in a pending split. Cannot delete the user.")
+	}
+	if err != nil {
+		app.ErrorLog.Println(err.Error())
+		app.Session.Put(r, "Flash", "Testing.")
+		log.Println("DeleteUser(): ", err)
+		return
+	}
+	app.Session.Put(r, "Flash", "Testing.")
+	// Redirecting to the all users page by using http.Redirect
+	http.Redirect(w, r, "/allusers", http.StatusSeeOther)
+}
+
+// Cancelexpense is to cnacel the expense that created
+func (app *Application) Cancelexpense(w http.ResponseWriter, r *http.Request) {
+	value, errConvert := strconv.Atoi(r.FormValue("expenseId"))
+	if errConvert != nil {
+		log.Println(errConvert)
+		return
+	}
+
+	err := app.Expense.Cancelupdate(value)
+	if err != nil {
+		app.ErrorLog.Println(err.Error())
+		log.Println("Cancelexpense(): ", err)
+		return
+	}
+
+	// redirect to the home page
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

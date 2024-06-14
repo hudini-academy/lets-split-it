@@ -5,8 +5,14 @@
         <meta charset='utf-8'>
         <title>{{block "title" .}}{{end}}</title>
         <link rel='stylesheet' href='/static/css/main.css'>
-
     </head>
+    <div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
+    <div class="action-btns" style="float: left;">
+        <a href="/"><img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;"></a>
+    </div>
+    {{template "header" .}}
+    <div style="clear: both;"></div>
+</div>
     <body>
         <section>
             {{block "body" .}}{{end}}
