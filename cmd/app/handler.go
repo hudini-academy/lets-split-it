@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"regexp"
+
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -48,19 +47,47 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 
 // Login the user after authentication.
 func (app *Application) LoginUser(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"ui/html/login.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
 	user := r.FormValue("email")
 	password := r.FormValue("password")
 
-	id, errAuth := app.User.Autenticate(user, password)
-	if errAuth != nil {
-		app.Session.Put(r, "flash", "Email or Password is incorrect")
-		app.ErrorLog.Println(errAuth)
-		log.Println(errAuth)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	if app.Validate(r, user, "email") || app.Validate(r, password, "Ispassword") {
+		flash := app.Session.PopString(r, "flash")
+		app.render(w, files, &templateData{
+			Flash: flash,
+			Email: user,
+		})
 		return
 	}
-	app.Session.Put(r, "userId", id)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	exists, err := app.User.CheckEmail(user)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		return
+	}
+	if exists {
+		id, errAuth := app.User.Autenticate(user, password)
+		if errAuth != nil {
+			app.Session.Put(r, "flash", "Password is incorrect")
+			flash := app.Session.PopString(r, "flash")
+			app.render(w, files, &templateData{
+				Flash: flash,
+				Email: user,
+			})
+			app.ErrorLog.Println(errAuth)
+			log.Println(errAuth)
+			return
+		}
+		app.Session.Put(r, "userId", id)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	} else {
+		app.Session.Put(r, "flash", "Email is incorrect")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+
 }
 
 // AddUserForm renders the add user form.
@@ -76,48 +103,58 @@ func (app *Application) AddUserform(w http.ResponseWriter, r *http.Request) {
 
 // AddUser adds a new user to the database.
 func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("username")
+
+	files := []string{
+		"ui/html/adduser.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+	// Retrieve form values
+	username := r.FormValue("username")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	if app.Validate(r, name, "name") || app.Validate(r, email, "email") || app.Validate(r, password, "password") {
-		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+	app.Validate(r, username, "name")
+	app.Validate(r, email, "email")
+	app.Validate(r, password, "password")
+	flash := app.Session.PopString(r, "flash")
+	log.Println("Passed")
+	// If there are validation errors, render the template with errors
+	if app.Validate(r, username, "name") || app.Validate(r, email, "email") || app.Validate(r, password, "password") {
+		app.render(w, files, &templateData{
+			Flash:    flash,
+			Email:    email,
+			Username: username,
+		})
 		return
 	}
 
+	// Check if username already exists
+	if !app.isValidUser(r, username) {
+		app.render(w, files, &templateData{
+			Email: email,
+			Flash: app.Session.PopString(r, "flash"),
+		})
+		return
+	}
+
+	// Check if email is valid and does not already exist
 	if !app.isValidEmail(r, email) {
-		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		app.render(w, files, &templateData{
+			Username: username,
+			Flash:    app.Session.PopString(r, "flash"),
+		})
 		return
 	}
 
-	err := app.User.InsertUser(name, email, password)
+	// Insert user into the database
+	err := app.User.InsertUser(username, email, password)
 	if err != nil {
-		app.ErrorLog.Println(err.Error())
-		http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+		app.ErrorLog.Println("Error inserting user:", err)
 		return
 	}
 
+	// Redirect to /adduser on success (to clear form)
 	http.Redirect(w, r, "/adduser", http.StatusSeeOther)
-}
-
-func (app *Application) isValidEmail(r *http.Request, email string) bool {
-	regex := `^[a-zA-Z0-9._%+-]+@(gmail|yahoo)\.com$`
-	if regexp.MustCompile(regex).MatchString(email) {
-		exists, err := app.User.CheckEmail(email)
-		if err != nil {
-			app.ErrorLog.Println(err)
-			app.Session.Put(r, "flash", "An error occurred while checking the email")
-			return false
-		}
-		if exists {
-			app.Session.Put(r, "flash", "The email already exists")
-			return false
-		}
-		app.Session.Put(r, "flash", "User Successfully created")
-		return true
-	}
-	app.Session.Put(r, "flash", "The email is not valid")
-	return false
 }
 
 func (app *Application) Validate(r *http.Request, field string, fieldType string) bool {
@@ -138,6 +175,11 @@ func (app *Application) Validate(r *http.Request, field string, fieldType string
 	case "password":
 		if utf8.RuneCountInString(field) < 8 {
 			app.Session.Put(r, "flash", "The password is too short (minimum is 8 characters)!")
+			return true
+		}
+	case "Ispassword":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The password field is blank!")
 			return true
 		}
 	}

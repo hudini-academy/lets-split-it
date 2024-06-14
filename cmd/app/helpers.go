@@ -6,17 +6,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"text/template"
 )
 
 type templateData struct {
-	Flash    string
-	Error    map[string]string
-	UserId   int
-	UserList []*models.User
-	UserData []*models.User
-	YourSplit []*models.Expense
-	Involved []*models.Expense
+	Flash          string
+	Error          map[string]string
+	Email          string
+	Username       string
+	UserId         int
+	UserList       []*models.User
+	UserData       []*models.User
+	YourSplit      []*models.Expense
+	Involved       []*models.Expense
 	ExpenseDetails *models.ExpenseDetails
 }
 
@@ -73,4 +76,39 @@ func (app *Application) render(w http.ResponseWriter, files []string, td *templa
 func (app *Application) AuthenticatedUser(r *http.Request) bool {
 	loggedId := app.Session.GetInt(r, "userId")
 	return loggedId != 0
+}
+
+func (app *Application) isValidEmail(r *http.Request, email string) bool {
+	regex := `^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$`
+	if regexp.MustCompile(regex).MatchString(email) {
+		exists, err := app.User.CheckEmail(email)
+		if err != nil {
+			app.ErrorLog.Println(err)
+			app.Session.Put(r, "flash", "An error occurred while checking the email")
+			return false
+		}
+		if exists {
+			app.Session.Put(r, "flash", "The email already exists")
+			return false
+		}
+		app.Session.Put(r, "flash", "User Successfully created")
+		return true
+	}
+	app.Session.Put(r, "flash", "The email is not valid")
+	return false
+}
+
+func (app *Application) isValidUser(r *http.Request, name string) bool {
+	exists, err := app.User.CheckUser(name)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.Session.Put(r, "flash", "An error occurred while checking the email")
+		return false
+	}
+
+	if exists {
+		app.Session.Put(r, "flash", "The name already exists")
+		return false
+	}
+	return true
 }
