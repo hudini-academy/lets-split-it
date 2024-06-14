@@ -12,7 +12,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 1px solid #ddd; /* Added border around container */
+    border: 1px solid #ddd; 
 }
 
 .header {
@@ -40,10 +40,10 @@ label {
 input[type="email"],
 input[type="password"],
 input[type="submit"] {
-    width: calc(100% - 24px); /* Adjusted width to leave space for border */
+    width: calc(100% - 24px); 
     padding: 12px;
     margin-bottom: 20px;
-    border: 1px solid #ddd; /* Added border around input fields */
+    border: 1px solid #ddd;
     border-radius: 5px;
     box-sizing: border-box;
 }
@@ -114,30 +114,41 @@ h3 {
     border: 1px solid #ccc;
     border-radius: 30px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
 }
 
 .split-box:hover {
     background-color: #f9f9f9;
 }
 
+.split-title {
+    font-weight: bold;
+    font-size: 20px;
+    padding: 0px;
+}
 .split-amount {
     font-weight: bold;
-    font-size: 24px;
+    font-size: 12px;
+    padding: 0px;
 }
-
 .split-date {
     float: right;
+    font-size: 12px;    
+    padding: 0px;
 }
 
 .split-note {
-    padding: 10px 0;
+    padding: 0px;
+    font-size: 14px;
+    margin-bottom: 2px;
 }
 
 .split-status {
     padding: 5px 10px;
-    border-radius: 3px;
+    border-radius: 10px;
     color: #fff;
+    margin-top: 5px;
+    font-size: 12px;
 }
 form {
     max-width: 600px;

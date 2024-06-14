@@ -13,12 +13,12 @@ type SplitModel struct {
 	DB *sql.DB
 }
 
-func (m *SplitModel) Insert(note string, amount float64, userId int) (sql.Result, error) {
+func (m *SplitModel) Insert(note string, amount float64, userId int, title string) (sql.Result, error) {
 
-	stmt := `INSERT INTO expense (note, amount,userId,date)
-				VALUES(?,?,?,utc_timestamp())`
+	stmt := `INSERT INTO expense (note, amount,userId,date, title)
+				VALUES(?,?,?,utc_timestamp(), ?)`
 
-	result, err := m.DB.Exec(stmt, note, amount, userId)
+	result, err := m.DB.Exec(stmt, note, amount, userId, title)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +38,10 @@ func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []stri
 			if err != nil {
 				log.Println(err)
 			}
+			_,err = m.DB.Exec("UPDATE expense SET status = 1 WHERE expenseId = ?", ExpenseId)
+			if err!= nil {
+                log.Println(err)
+            }
 		} else {
 			_, err := m.DB.Exec("INSERT INTO split (expenseId, userId, amount) VALUES (?, ?, ?)", ExpenseId, userIdInt, roundedSplitAmount)
 			if err != nil {
@@ -50,7 +54,7 @@ func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []stri
 }
 
 func (m *SplitModel) GetYourSplit(userId int) ([]*models.Expense, error) {
-	stmt := ` SELECT * FROM expense WHERE userId = ? `
+	stmt := ` SELECT e.*, u.name FROM expense e, user u WHERE e.userId = ? AND u.userId=e.userId ORDER BY e.expenseId DESC`
 
 	rows, err := m.DB.Query(stmt, userId)
 	if err != nil {
@@ -60,7 +64,7 @@ func (m *SplitModel) GetYourSplit(userId int) ([]*models.Expense, error) {
 	sliceYourSplit := []*models.Expense{}
 	for rows.Next() {
 		s := &models.Expense{}
-		err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Date, &s.Status)
+		err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Title, &s.Date, &s.Status, &s.CreatedUserName)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +79,7 @@ func (m *SplitModel) GetYourSplit(userId int) ([]*models.Expense, error) {
 // GetInvolvedSplits fetches the list of splits where the user have to pay.
 func (m *SplitModel) GetInvolvedSplits(userId int) ([]*models.Expense, error) {
 	var expenseDetails []*models.Expense
-	stmt := `SELECT expenseId FROM split WHERE userId = ? AND datePaid IS NULL`
+	stmt := `SELECT expenseId FROM split WHERE userId = ? AND datePaid IS NULL ORDER BY expenseId DESC`
 	rows, err := m.DB.Query(stmt, userId)
 	if err != nil {
 		return nil, err
@@ -86,10 +90,10 @@ func (m *SplitModel) GetInvolvedSplits(userId int) ([]*models.Expense, error) {
 		if err != nil {
 			return nil, err
 		}
-		stmt2 := `SELECT * FROM expense WHERE expenseId =?`
+		stmt2 := `SELECT e.*, u.name FROM expense e, user u WHERE expenseId =? AND u.userId = e.userId`
 		rows2 := m.DB.QueryRow(stmt2, id)
 		expense := &models.Expense{}
-		err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Date, &expense.Status)
+		err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Title, &expense.Date, &expense.Status, &expense.CreatedUserName)
 		if err != nil {
 			return nil, err
 		}
@@ -104,11 +108,12 @@ func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, 
 	var note string
 	var date time.Time
 	var name string
+	var title string
 
-	stmt := `SELECT amount, note, date, name FROM expense, user WHERE expenseId = ? AND expense.userId = user.userId`
+	stmt := `SELECT amount, note, date, name, title FROM expense, user WHERE expenseId = ? AND expense.userId = user.userId`
 	rows := m.DB.QueryRow(stmt, expenseId)
 
-	rows.Scan(&totalAmount, &note, &date, &name)
+	rows.Scan(&totalAmount, &note, &date, &name, &title)
 
 	stmt2 := `SELECT amount, datePaid, name, split.userId, expenseId from split, user WHERE split.userId = user.userId AND split.expenseId = ?`
 	rows2, err := m.DB.Query(stmt2, expenseId)
@@ -116,21 +121,26 @@ func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, 
 		return nil, err
 	}
 	var splitDetails []*models.Split
+	var outstandingBalance float64
 	for rows2.Next() {
 		s := &models.Split{}
 		err = rows2.Scan(&s.Amount, &s.DatePaid, &s.Name, &s.UserId, &s.ExpenseId)
 		if err != nil {
 			return nil, err
 		}
+		if !s.DatePaid.Valid {
+			outstandingBalance += s.Amount
+		}
 		splitDetails = append(splitDetails, s)
 	}
-	var expenseDetails *models.ExpenseDetails
-	expenseDetails = &models.ExpenseDetails{
+	expenseDetails := &models.ExpenseDetails{
 		Amount: totalAmount,
         Note: note,
         Date: date,
         CreatedName: name,
+		Title: title,
         SplitDetails: splitDetails,
+		OutstandingBalance: outstandingBalance,
 	}
 	return expenseDetails, nil
 }

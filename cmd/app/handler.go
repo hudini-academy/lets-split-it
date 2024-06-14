@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -114,31 +113,36 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 	amount := r.FormValue("amount")
 	amountFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		app.Session.Put(r, "flash", "Invalid amount!")
+		app.Session.Put(r, "flash", "Invalid amount !")
+		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 		return
 	}
 	note := r.FormValue("note")
+	title := r.FormValue("title")
 
-	result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"))
+	if title == ""{
+		app.Session.Put(r, "flash", "Title Required !")
+		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+        return
+	}
+
+	result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"), title)
 	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 	if err != nil {
+		log.Println(err)
 		app.ErrorLog.Fatal()
 		return
 	}
-	app.Session.Put(r, "flash", "Task successfully created!")
+	app.Session.Put(r, "flash", "Task successfully created !")
 
 	usersSelected := r.Form["user[]"]
 
-	fmt.Println("Ids selected:")
-	for _, id := range usersSelected {
-		fmt.Println(id)
-	}
 	expenseId, err := result.LastInsertId()
 	if err != nil {
 		app.ErrorLog.Fatal()
 	}
-	log.Println("done.....")
 	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
+	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 
 }
 
@@ -154,6 +158,7 @@ func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) 
 	}
 	app.render(w, files, &templateData{
 		UserData: userList,
+		Flash: app.Session.PopString(r, "flash"),
 	})
 
 }

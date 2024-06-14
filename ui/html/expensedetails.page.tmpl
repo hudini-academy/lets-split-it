@@ -84,11 +84,16 @@
 <br><br><br><br><br>
     <div class="expense-details">
         <div class="main-amount">
-            <h2>Main Amount: {{.ExpenseDetails.Amount}}</h2>
+            <h2>{{.ExpenseDetails.Title}}</h2>
         </div>
-        <div class="note">Note: {{.ExpenseDetails.Note}}</div>
+        <div class="note">
+            <span style="font-weight: bold;">Rs.{{.ExpenseDetails.Amount}}<span>
+            <span style="font-weight: bold; float: right;">{{if eq .ExpenseDetails.OutstandingBalance 0.0 }}ALL Paid{{else}}Outstanding Balance: Rs. {{.ExpenseDetails.OutstandingBalance}}{{end}}<span>
+        </div>
+        <div class="note">Description: {{.ExpenseDetails.Note}}</div>
         <div class="dates">
-            <p>Date Created: {{.ExpenseDetails.Date}}</p>
+            <span style="font-size: 13px; color: grey; float: right;">{{.ExpenseDetails.Date}}</span>
+            <span style="font-size: 13px; color: grey;">Spent by {{.ExpenseDetails.CreatedName}}</span>
         </div>
         <table>
             <tr>

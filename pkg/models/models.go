@@ -21,12 +21,14 @@ type User struct {
 }
 
 type Expense struct {
-	ExpenseId int
-	UserId    int
-	Note      string
-	Amount    float64
-	Date      time.Time
-	Status    int
+	ExpenseId       int
+	UserId          int
+	CreatedUserName string
+	Note            string
+	Amount          float64
+	Title           string
+	Date            time.Time
+	Status          int
 }
 
 type Split struct {
@@ -38,10 +40,16 @@ type Split struct {
 }
 
 type ExpenseDetails struct {
-	ExpenseId    int
-	Amount       float64
-	Date         time.Time
-	Note         string
-	CreatedName  string
-	SplitDetails []*Split
+	ExpenseId          int
+	Amount             float64
+	Date               time.Time
+	Note               string
+	CreatedName        string
+	Title              string
+	OutstandingBalance float64
+	SplitDetails       []*Split
+}
+
+func (e ExpenseDetails) formatDate(date time.Time) string {
+	return date.Format("02 Jan 2006")
 }
