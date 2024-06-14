@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -207,7 +208,7 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 		app.ErrorLog.Fatal()
 	}
 	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
-	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 
 }
 
@@ -251,7 +252,32 @@ func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
 	app.render(w, files, &templateData{
 		UserId:         app.Session.GetInt(r, "userId"),
 		ExpenseDetails: expenseDetails,
+		Flash: app.Session.PopString(r, "flash"),
 	})
+}
+
+func (app *Application) MarkAsPaid(w http.ResponseWriter, r *http.Request) {
+
+	expenseId := r.FormValue("expenseId")
+	intexpenseId, _ := strconv.Atoi(expenseId)
+	userId := app.Session.GetInt(r, "userId")
+	bool,err := app.Expense.CheckIfPaid(userId, intexpenseId)
+	if err != nil {
+		app.ErrorLog.Println()
+	}
+	if bool{
+		app.Session.Put(r, "flash", "You already Paid Biaaatch")
+		log.Println("You already Paid Biaaatch")
+		http.Redirect(w, r, fmt.Sprintf("/expense_details?expenseId=%d", intexpenseId), http.StatusSeeOther)
+		return
+		
+	}
+	err = app.Expense.Mark(userId, intexpenseId)
+	if err != nil {
+		app.ErrorLog.Println()
+	}
+	http.Redirect(w, r, fmt.Sprintf("/expense_details?expenseId=%d", intexpenseId), http.StatusSeeOther)
+
 }
 
 // DeleteUser is to delete the user already exists.
