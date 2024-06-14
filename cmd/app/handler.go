@@ -266,6 +266,7 @@ func (app *Application) MarkAsPaid(w http.ResponseWriter, r *http.Request) {
 	if bool{
 		app.Session.Put(r, "flash", "You already Paid Biaaatch")
 		log.Println("You already Paid Biaaatch")
+		http.Redirect(w, r, fmt.Sprintf("/expense_details?expenseId=%d", intexpenseId), http.StatusSeeOther)
 		return
 		
 	}
