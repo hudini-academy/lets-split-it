@@ -134,6 +134,7 @@ func (m *SplitModel) ListExpensedetails(expenseId int) (*models.ExpenseDetails, 
 		splitDetails = append(splitDetails, s)
 	}
 	expenseDetails := &models.ExpenseDetails{
+		ExpenseId: expenseId,
 		Amount: totalAmount,
         Note: note,
         Date: date,
@@ -156,7 +157,6 @@ func (m *SplitModel) Cancelupdate(expenseId int) error {
 	return nil
 }
 func (m *SplitModel) Mark(userId int, expenseId int) error {
-	log.Println(expenseId)
     // Check the count of non-null values in datepaid
     stmtCheckAllNull := `SELECT COUNT(*) FROM split WHERE expenseId = ? AND datepaid IS NOT NULL`
     var nonNullCount int
@@ -164,7 +164,6 @@ func (m *SplitModel) Mark(userId int, expenseId int) error {
     if err != nil {
         return err
     }
-	log.Println("non-null values in datepaid")
 
     // If all datepaid fields are NULL, set the status to 1
     if nonNullCount == 0 {
@@ -174,15 +173,12 @@ func (m *SplitModel) Mark(userId int, expenseId int) error {
             return err
         }
     }
-	log.Println("set the status to 1")
-
     // Update the datepaid of the corresponding user
     stmtUpdate := `UPDATE split SET datepaid = UTC_TIMESTAMP() WHERE userId = ? AND expenseId = ?`
     _, err = m.DB.Exec(stmtUpdate, userId, expenseId)
     if err != nil {
         return err
     }
-	log.Println("Update the datepaid of the corresponding user")
 
     // Check if all users in the expense have non-null datepaid
     stmtCheck := `SELECT COUNT(*) FROM split WHERE expenseId = ? AND datepaid IS NULL`

@@ -189,12 +189,3 @@ input[type='submit'] {
 input[type='submit']:hover {
     background-color: #0056b3;
 }
-.pay-button {
-    background-color: yellow;
-    color: black;
-    border: none;
-    border-radius: 5px;
-    padding: 15px 30px;
-    cursor: pointer;
-    font-size: 20px;
-}

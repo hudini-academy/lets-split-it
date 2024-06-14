@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -223,7 +224,7 @@ func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) 
 	}
 	app.render(w, files, &templateData{
 		UserData: userList,
-		Flash: app.Session.PopString(r, "flash"),
+		Flash:    app.Session.PopString(r, "flash"),
 	})
 
 }
@@ -251,7 +252,7 @@ func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
 	app.render(w, files, &templateData{
 		UserId:         app.Session.GetInt(r, "userId"),
 		ExpenseDetails: expenseDetails,
-		Flash: app.Session.PopString(r, "flash"),
+		Flash:          app.Session.PopString(r, "flash"),
 	})
 }
 
@@ -259,17 +260,17 @@ func (app *Application) MarkAsPaid(w http.ResponseWriter, r *http.Request) {
 
 	expenseId := r.FormValue("expenseId")
 	intexpenseId, _ := strconv.Atoi(expenseId)
+	log.Println(intexpenseId)
 	userId := app.Session.GetInt(r, "userId")
-	bool,err := app.Expense.CheckIfPaid(userId, intexpenseId)
+	bool, err := app.Expense.CheckIfPaid(userId, intexpenseId)
 	if err != nil {
 		app.ErrorLog.Println()
 	}
-	if bool{
-		app.Session.Put(r, "flash", "You already Paid Biaaatch")
-		log.Println("You already Paid Biaaatch")
+	if bool {
+		app.Session.Put(r, "flash", "You already Paid !")
 		http.Redirect(w, r, fmt.Sprintf("/expense_details?expenseId=%d", intexpenseId), http.StatusSeeOther)
 		return
-		
+
 	}
 	err = app.Expense.Mark(userId, intexpenseId)
 	if err != nil {

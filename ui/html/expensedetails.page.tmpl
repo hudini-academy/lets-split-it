@@ -1,43 +1,10 @@
-{{template "base" .}}
-{{define "title"}}Expense Details{{end}}
-{{define "header"}}
-<div class="action-btns" style="float: right;">
-        <button onclick="location.href='/logout'">Logout</button>
-</div>
-{{end}}
-{{define "body"}}
-<body>
-<br><br><br><br><br>
-    <div class="expense-details">
-        <div class="main-amount"><a href="/markaspaid?expenseId={{.ExpenseDetails.ExpenseId}}"><button class="pay-button" style="float:right">Pay</button></a>
-            <h2>Main Amount: {{.ExpenseDetails.Amount}}</h2>
-        </div>
-        <div class="note">Note: {{.ExpenseDetails.Note}}</div>
-        <div class="dates">
-            <p>Date Created: {{.ExpenseDetails.Date}}</p>
-        </div>
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Split Amount</th>
-                <th>Paid On</th>
-                <th>Status</th>
-            </tr>
-            {{range .ExpenseDetails.SplitDetails}}
-            <tr>
-                <td>{{.Name}}</td>
-                <td>{{.Amount}}</td>
-                <td>{{if eq .DatePaid.Valid true}}{{.DatePaid.Time}}{{end}}</td>
-                <td>
-                    {{if eq .DatePaid.Valid true}}<span class="status-paid">Paid</span>{{else}}<span class="status-to-be-paid">To be paid</span>{{end}}
-                </td>
-            </tr>
-            {{end}}
-        </table>
-    </div>
-</body>
-{{end}}
- <style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Details</title>
+    <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -102,6 +69,18 @@
     .action-btns button:hover {
         background-color: #0056b3;
     }
+    .pay-button {
+    background-color: yellow;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 30px;
+    cursor: pointer;
+    font-size: 20px;
+    float: right;
+}
+
+
     </style>
 </head>
 <body>
@@ -116,9 +95,11 @@
 <br><br><br><br><br>
     <div class="expense-details">
         <div class="main-amount">
-            <h2>{{.ExpenseDetails.Title}}</h2>
+            <span style="font-size: 24px; font-weight: bold;">{{.ExpenseDetails.Title}}</span>
+            <a href="/markaspaid?expenseId={{.ExpenseDetails.ExpenseId}}"><button class="pay-button" style="float:right">Pay</button></a>
         </div>
         <div class="note">
+        <br>
             <span style="font-weight: bold;">Rs.{{.ExpenseDetails.Amount}}<span>
             <span style="font-weight: bold; float: right;">{{if eq .ExpenseDetails.OutstandingBalance 0.0 }}ALL Paid{{else}}Outstanding Balance: Rs. {{.ExpenseDetails.OutstandingBalance}}{{end}}<span>
         </div>
