@@ -23,17 +23,6 @@ func (m *SplitModel) Insert(note string, amount float64, userId int, title strin
 		return nil, err
 	}
 	return result, nil
-
-	log.Println("Inside insert")
- 
-    stmt := `INSERT INTO expense (note, amount,userId,date, title)
-                VALUES(?,?,?,utc_timestamp(), ?)`
- 
-    result, err := m.DB.Exec(stmt, note, amount, userId, title)
-    if err != nil {
-        return nil, err
-    }
-    return result, nil
  
 }
 
