@@ -13,17 +13,19 @@ type SplitModel struct {
 	DB *sql.DB
 }
 
-func (m *SplitModel) Insert(note string, amount float64, userId int) (sql.Result, error) {
+func (m *SplitModel) Insert(note string, amount float64, userId int, title string) (sql.Result, error) {
 
-	stmt := `INSERT INTO expense (note, amount,userId,date)
-				VALUES(?,?,?,utc_timestamp())`
-
-	result, err := m.DB.Exec(stmt, note, amount, userId)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-
+	log.Println("Inside insert")
+ 
+    stmt := `INSERT INTO expense (note, amount,userId,date, title)
+                VALUES(?,?,?,utc_timestamp(), ?)`
+ 
+    result, err := m.DB.Exec(stmt, note, amount, userId, title)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+ 
 }
 
 func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []string, currentUserId int) error {
@@ -50,52 +52,52 @@ func (m *SplitModel) Insert2Split(ExpenseId int64, amount float64, userId []stri
 }
 
 func (m *SplitModel) GetYourSplit(userId int) ([]*models.Expense, error) {
-	stmt := ` SELECT * FROM expense WHERE userId = ? `
-
-	rows, err := m.DB.Query(stmt, userId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	sliceYourSplit := []*models.Expense{}
-	for rows.Next() {
-		s := &models.Expense{}
-		err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Date, &s.Status)
-		if err != nil {
-			return nil, err
-		}
-		sliceYourSplit = append(sliceYourSplit, s)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return sliceYourSplit, nil
+    stmt := ` SELECT * FROM expense WHERE userId = ? `
+ 
+    rows, err := m.DB.Query(stmt, userId)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    sliceYourSplit := []*models.Expense{}
+    for rows.Next() {
+        s := &models.Expense{}
+        err = rows.Scan(&s.ExpenseId, &s.UserId, &s.Note, &s.Amount, &s.Title, &s.Date, &s.Status)
+        if err != nil {
+            return nil, err
+        }
+        sliceYourSplit = append(sliceYourSplit, s)
+    }
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+    return sliceYourSplit, nil
 }
 
 // GetInvolvedSplits fetches the list of splits where the user have to pay.
 func (m *SplitModel) GetInvolvedSplits(userId int) ([]*models.Expense, error) {
-	var expenseDetails []*models.Expense
-	stmt := `SELECT expenseId FROM split WHERE userId = ? AND datePaid IS NULL`
-	rows, err := m.DB.Query(stmt, userId)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
-		var id int
-		err = rows.Scan(&id)
-		if err != nil {
-			return nil, err
-		}
-		stmt2 := `SELECT * FROM expense WHERE expenseId =?`
-		rows2 := m.DB.QueryRow(stmt2, id)
-		expense := &models.Expense{}
-		err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Date, &expense.Status)
-		if err != nil {
-			return nil, err
-		}
-		expenseDetails = append(expenseDetails, expense)
-	}
-	return expenseDetails, nil
+    var expenseDetails []*models.Expense
+    stmt := `SELECT expenseId FROM split WHERE userId = ? AND datePaid IS NULL`
+    rows, err := m.DB.Query(stmt, userId)
+    if err != nil {
+        return nil, err
+    }
+    for rows.Next() {
+        var id int
+        err = rows.Scan(&id)
+        if err != nil {
+            return nil, err
+        }
+        stmt2 := `SELECT * FROM expense WHERE expenseId =?`
+        rows2 := m.DB.QueryRow(stmt2, id)
+        expense := &models.Expense{}
+        err = rows2.Scan(&expense.ExpenseId, &expense.UserId, &expense.Note, &expense.Amount, &expense.Title, &expense.Date, &expense.Status)
+        if err != nil {
+            return nil, err
+        }
+        expenseDetails = append(expenseDetails, expense)
+    }
+    return expenseDetails, nil
 }
 
 // ListExpensedetails returns the details of that specified expense.

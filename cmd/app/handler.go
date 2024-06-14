@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -212,62 +211,63 @@ func (app *Application) AllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Error parsing form", http.StatusInternalServerError)
-		return
-	}
-
-	amount := r.FormValue("amount")
-	amountFloat, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		app.Session.Put(r, "flash", "Invalid amount!")
-		return
-	}
-	note := r.FormValue("note")
-
-	usersSelected := r.Form["user[]"]
-
-	if len(usersSelected) == 0 {
-		app.Session.Put(r, "flash", "No users selected!")
-		return
-	}
-
-	result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"))
-	if err != nil {
-		app.ErrorLog.Fatal()
-		return
-	}
-	app.Session.Put(r, "flash", "Task successfully created!")
-
-	fmt.Println("Ids selected:")
-	for _, id := range usersSelected {
-		fmt.Println(id)
-	}
-	expenseId, err := result.LastInsertId()
-	if err != nil {
-		app.ErrorLog.Fatal()
-	}
-	log.Println("done.....")
-	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
-	http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
-
+    err := r.ParseForm()
+    if err != nil {
+        http.Error(w, "Error parsing form", http.StatusInternalServerError)
+        return
+    }
+ 
+    amount := r.FormValue("amount")
+    amountFloat, err := strconv.ParseFloat(amount, 64)
+    if err != nil {
+        app.Session.Put(r, "flash", "Invalid amount !")
+        http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+        return
+    }
+    note := r.FormValue("note")
+    title := r.FormValue("title")
+ 
+    if title == ""{
+        app.Session.Put(r, "flash", "Title Required !")
+        http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+        return
+    }
+ 
+    result, err := app.Expense.Insert(note, amountFloat, app.Session.GetInt(r, "userId"), title)
+    http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+    if err != nil {
+        log.Println(err)
+        app.ErrorLog.Fatal()
+        return
+    }
+    app.Session.Put(r, "flash", "Task successfully created !")
+ 
+    usersSelected := r.Form["user[]"]
+ 
+    expenseId, err := result.LastInsertId()
+    if err != nil {
+        app.ErrorLog.Fatal()
+    }
+    app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
+    http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+ 
 }
 
 func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"ui/html/split.page.tmpl",
-		"ui/html/base.layout.tmpl",
-	}
-	userList, errGettingList := app.User.GetAllUsers()
-	if errGettingList != nil {
-		app.ErrorLog.Fatal()
-		return
-	}
-	app.render(w, files, &templateData{
-		UserData: userList,
-	})
-
+    files := []string{
+        "ui/html/split.page.tmpl",
+        "ui/html/base.layout.tmpl",
+    }
+    userList, errGettingList := app.User.GetAllUsers()
+    if errGettingList != nil {
+        app.ErrorLog.Fatal()
+        return
+    }
+    app.render(w, files, &templateData{
+        UserData: userList,
+        Flash: app.Session.PopString(r, "flash"),
+    })
+ 
 }
 
 func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
