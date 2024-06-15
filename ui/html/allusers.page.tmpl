@@ -1,15 +1,12 @@
 {{template "base" .}}
 {{define "title"}}All Users{{end}}
-{{define "body"}}
- 
-<div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
-    <div class="action-btns" style="float: left;">
-        <img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;">
-    </div>
+{{define "header"}}
+
     <div class="action-btns" style="float: right;">
         <button onclick="location.href='/adduser'">Add user</button>
     </div>
-</div>
+{{end}}
+{{define "body"}}
  
 <div style="margin-top: 50px; text-align: center;">
     <h2>Users</h2>

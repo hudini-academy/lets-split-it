@@ -47,56 +47,48 @@
             background-color: #2ecc71;
             color: #fff;
             padding: 4px 8px;
-            border-radius: 3px;
+            border-radius: 30px;
+            font-size: 12px;
         }
         .status-to-be-paid {
             background-color: red;
             color: #fff;
             padding: 4px 8px;
-            border-radius: 3px;
+            border-radius: 30px;
+            font-size: 12px;
         }
-        .action-btns button {
+   
+    .pay-button {
         background-color: #007bff;
-        color: #fff;
+        color: #fff; 
         border: none;
-        border-radius: 5px;
-        padding: 10px 20px;
+        border-radius: 30px;
+        padding: 15px 25px;
         cursor: pointer;
         font-size: 16px;
-        margin-right: 30px;
+        float: right;
+        transition: background-color 0.3s ease; 
     }
 
-    .action-btns button:hover {
-        background-color: #0056b3;
+    .pay-button:hover {
+        background-color: #1060b6; 
     }
-    .pay-button {
-    background-color: yellow;
-    color: black;
-    border: none;
-    border-radius: 5px;
-    padding: 15px 30px;
-    cursor: pointer;
-    font-size: 20px;
-    float: right;
-}
-
 
     </style>
 </head>
 <body>
 <div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
     <div class="action-btns" style="float: left;">
-        <img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;">
-    </div>
-    <div class="action-btns" style="float: right;">
-        <button onclick="location.href='/'">Home</button>
+        <a href="/"><img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;"></a>
     </div>
 </div>
 <br><br><br><br><br>
     <div class="expense-details">
         <div class="main-amount">
             <span style="font-size: 24px; font-weight: bold;">{{.ExpenseDetails.Title}}</span>
-            <a href="/markaspaid?expenseId={{.ExpenseDetails.ExpenseId}}"><button class="pay-button" style="float:right">Pay</button></a>
+            {{if eq .ExpenseDetails.Paid 0}}
+                <a href="/markaspaid?expenseId={{.ExpenseDetails.ExpenseId}}"><button class="pay-button" style="float:right">Pay Now</button></a>
+            {{end}}
         </div>
         <div class="note">
         <br>
@@ -119,7 +111,7 @@
             <tr>
                 <td>{{.Name}}</td>
                 <td>{{.Amount}}</td>
-                <td>{{if eq .DatePaid.Valid true}}{{.DatePaid.Time}}{{end}}</td>
+                <td>{{if eq .DatePaid.Valid true}}{{.DatePaid.Time.Format "02/01/2006"}}{{end}}</td>
                 <td>
                     {{if eq .DatePaid.Valid true}}<span class="status-paid">Paid</span>{{else}}<span class="status-to-be-paid">To be paid</span>{{end}}
                 </td>

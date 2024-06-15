@@ -4,10 +4,8 @@
 {{end}}
 {{define "body"}}
 <br><br><br><br><br>
-<form action='/login' method='POST' novalidate>
-    <div>
-        <label style="display: block; margin-bottom: 5px; font-size: 12px">Email:</label>
-        <input type='email' name='email' style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"  required>
+<h1 class="login-header">LET'S SPLIT IT</h1>
+<h3 class="login-sub-header">LOGIN</h3>
 <form action='/login' method='POST' novalidate>
     <div>
         <label style="display: block; margin-bottom: 5px; font-size: 12px">Email:</label>
@@ -22,7 +20,7 @@
     </div>
     <div>
     {{with .Flash}}
-        <div class="flash">{{.}}</div>
+        <div class="flash">* {{.}}</div>
     {{end}}
 </div>
 </form>

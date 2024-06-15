@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -117,7 +118,6 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 	app.Validate(r, email, "email")
 	app.Validate(r, password, "password")
 	flash := app.Session.PopString(r, "flash")
-	log.Println("Passed")
 	// If there are validation errors, render the template with errors
 	if app.Validate(r, username, "name") || app.Validate(r, email, "email") || app.Validate(r, password, "password") {
 		app.render(w, files, &templateData{
@@ -218,6 +218,14 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Return if no users is selected for the split.
+	usersSelected := r.Form["user[]"]
+	if len(usersSelected) == 0 {
+        app.Session.Put(r, "flash", "No participants selected !")
+        http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+        return
+    }
+
 	amount := r.FormValue("amount")
 	amountFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
@@ -242,8 +250,6 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.Session.Put(r, "flash", "Task successfully created !")
-
-	usersSelected := r.Form["user[]"]
 
 	expenseId, err := result.LastInsertId()
 	if err != nil {
@@ -279,7 +285,7 @@ func (app *Application) ExpenseDetails(w http.ResponseWriter, r *http.Request) {
 		log.Println(errConvert)
 		return
 	}
-	expenseDetails, errDetails := app.Expense.ListExpensedetails(expenseId)
+	expenseDetails, errDetails := app.Expense.ListExpensedetails(expenseId, app.Session.GetInt(r, "userId"))
 	if errDetails != nil {
 		app.ErrorLog.Println()
 		log.Println("AllUsers(): ", errDetails)
@@ -334,6 +340,7 @@ func (app *Application) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		app.Session.Put(r, "Flash", "User deleted successfully")
 	} else if !successDeleted && err == nil {
 		app.Session.Put(r, "Flash", "User is involved in a pending split. Cannot delete the user.")
+		log.Println("User is involved in a pending split. Cannot delete the user.")
 	}
 	if err != nil {
 		app.ErrorLog.Println(err.Error())

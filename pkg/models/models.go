@@ -48,6 +48,7 @@ type ExpenseDetails struct {
 	Title              string
 	OutstandingBalance float64
 	SplitDetails       []*Split
+	Paid               int
 }
 
 func (e ExpenseDetails) formatDate(date time.Time) string {
