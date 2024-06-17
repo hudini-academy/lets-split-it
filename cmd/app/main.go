@@ -64,6 +64,5 @@ func main() {
 		Expense: &mysql.SplitModel{DB:db},
 		Split: &mysql.SplitModel{DB:db},
 	}
-	log.Println("dalksjdlkasd")
 	errorLog.Fatal(http.ListenAndServe(app.Config.Addr, app.routes()))
 }

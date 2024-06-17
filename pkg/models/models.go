@@ -12,6 +12,7 @@ var (
 	ErrDuplicateEmail     = errors.New("models: duplicate email")
 )
 
+// User represents a user in the system.
 type User struct {
 	UserID         int
 	Name           string
@@ -20,6 +21,7 @@ type User struct {
 	Role           int
 }
 
+// Expense represents an expense in the system.
 type Expense struct {
 	ExpenseId       int
 	UserId          int
@@ -31,6 +33,7 @@ type Expense struct {
 	Status          int
 }
 
+//	Split represents a single split in the system.
 type Split struct {
 	ExpenseId int
 	UserId    int
@@ -39,6 +42,7 @@ type Split struct {
 	Name      string
 }
 
+// ExpenseDetails represents details of an expense in the system.
 type ExpenseDetails struct {
 	ExpenseId          int
 	Amount             float64
@@ -49,8 +53,6 @@ type ExpenseDetails struct {
 	OutstandingBalance float64
 	SplitDetails       []*Split
 	Paid               int
+	Status             int
 }
 
-func (e ExpenseDetails) formatDate(date time.Time) string {
-	return date.Format("02 Jan 2006")
-}

@@ -10,6 +10,12 @@
     <div class="action-btns" style="float: left;">
         <a href="/"><img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;"></a>
     </div>
+    {{if ne .TitleUserName ""}}
+        <div class="action-btns" style="float: left;">
+        
+            <h3 style="font-size: 17px; letter-spacing: 4px; padding-top: 15px;" >Hey, {{.TitleUserName}}!</h3>
+        </div>
+    {{end}}
     {{template "header" .}}
     <div style="clear: both;"></div>
 </div>

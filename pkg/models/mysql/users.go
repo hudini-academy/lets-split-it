@@ -3,15 +3,25 @@ package mysql
 import (
 	"database/sql"
 	"expense/pkg/models"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserModel handles database operations related to the user.
 type UserModel struct {
 	DB *sql.DB
 }
 
 // InsertUser creates a new user.
+
+// Parameters:
+// name - the name of the user.
+// email - the email of the user.
+// password - the password of the user.
+
+// Returns: Error, if any.
 func (m *UserModel) InsertUser(name, email, password string) error {
+	// Encrypt the password.
 	hashedpassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
@@ -24,6 +34,12 @@ func (m *UserModel) InsertUser(name, email, password string) error {
 	return nil
 }
 
+// CheckEmail checks if the email is already in the database.
+
+// Parameters:
+// email - The email to check.
+
+// Returns: true if the email is in the database, false otherwise and an error, if any.
 func (m *UserModel) CheckEmail(email string) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM user WHERE email = ?)"
@@ -34,6 +50,12 @@ func (m *UserModel) CheckEmail(email string) (bool, error) {
 	return exists, nil
 }
 
+// CheckUser checks if the user is already in the database.
+
+// Parameters:
+// name - name of the user.
+
+// Returns: true if the user is in the database, false otherwise and an error, if any.
 func (m *UserModel) CheckUser(name string) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM user WHERE name = ?)"
@@ -44,29 +66,40 @@ func (m *UserModel) CheckUser(name string) (bool, error) {
 	return exists, nil
 }
 
-// Authenticate function checks if the user is in the datavase and returns the id of the user.
-func (u *UserModel) Autenticate(username, password string) (int, error) {
+// Authenticate function checks if the user is in the database.
+
+// Parameters:
+// username - the username of the user.
+// password - the password of the user.
+
+// Returns: the id of the user, the name of the user and an error, if any.
+func (u *UserModel) Autenticate(username, password string) (int, string, error) {
 	var id int
+	var name string
 	var hashedPassword []byte
-	row := u.DB.QueryRow(`SELECT userId, password FROM user WHERE email = ?`, username)
-	err := row.Scan(&id, &hashedPassword)
+	row := u.DB.QueryRow(`SELECT userId, name, password FROM user WHERE email = ?`, username)
+	err := row.Scan(&id, &name, &hashedPassword)
 	if err == sql.ErrNoRows {
-		return 0, models.ErrInvalidCredentials
+		return 0, "", models.ErrInvalidCredentials
 	} else if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	// Compare the provided password with the hashed password. If they match.
 	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return 0, models.ErrInvalidCredentials
+		return 0, "", models.ErrInvalidCredentials
 	} else if err != nil {
-		return 0, err
+		return 0, "", err
 	}
-	return id, nil
+	return id, name, nil
 }
 
-// ListUsers returns all the users in the database.
+// ListUsers fetches all the users in the database otherthan admin.
+
+// Parameters: none
+
+// Returns: a slice of users and an error, if any.
 func (m *UserModel) ListUsers() ([]*models.User, error) {
 	stmt := ` SELECT  userId, name ,email from user where userId > 1 `
 
@@ -88,9 +121,13 @@ func (m *UserModel) ListUsers() ([]*models.User, error) {
 		return nil, err
 	}
 	return sliceUser, nil
-
 }
 
+// GetAllUsers fetches all the users in the database.
+
+// Parameters: none
+
+// Returns: a slice of users and an error, if any.
 func (m *UserModel) GetAllUsers() ([]*models.User, error) {
 	stmt := `SELECT userId,name from user`
 
@@ -102,7 +139,6 @@ func (m *UserModel) GetAllUsers() ([]*models.User, error) {
 	UsersinDB := []*models.User{}
 
 	for rows.Next() {
-		// Create a pointer to a new zeroed Todos struct.
 		s := &models.User{}
 
 		err = rows.Scan(&s.UserID, &s.Name)
@@ -118,27 +154,27 @@ func (m *UserModel) GetAllUsers() ([]*models.User, error) {
 	return UsersinDB, nil
 }
 
-	//Delete will remove the user from the database
-	func (m *UserModel) Delete(id int) (bool, error) {
-		// Alternative SQL statement using LEFT JOIN without subquery
-		stmt := `DELETE user
+// Delete will remove the user from the database.
+// The user will be removed only if the user is not involved in an active split.
+
+// Parameters:
+// id - the id of the user.
+
+// Returns: true if the user is deleted, false otherwise and an error, if any.
+func (m *UserModel) Delete(id int) (bool, error) {
+	stmt := `DELETE user
 				 FROM user
 				 LEFT JOIN split ON user.userId = split.userId AND split.datePaid IS NULL
 				 WHERE user.userId = ? AND split.userId IS NULL;`
-		
-		// Execute the SQL statement
-		result, err := m.DB.Exec(stmt, id)
-		if err != nil {
-			return false, err
-		}
-		
-		// Check if any rows were affected
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return false, err
-		}
-		
-		// Return true if rows were affected, otherwise false
-		return rowsAffected > 0, nil
+
+	result, err := m.DB.Exec(stmt, id)
+	if err != nil {
+		return false, err
 	}
-	
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return rowsAffected > 0, nil
+}

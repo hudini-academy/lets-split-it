@@ -74,6 +74,22 @@
         background-color: #1060b6; 
     }
 
+    .cancel-button {
+        background-color: red;
+        color: #fff; 
+        border: none;
+        border-radius: 30px;
+        padding: 15px 25px;
+        cursor: pointer;
+        font-size: 16px;
+        float: right;
+        transition: background-color 0.3s ease; 
+    }
+
+    .cancel-button:hover {
+        background-color: #d64742; 
+    }
+
     </style>
 </head>
 <body>
@@ -86,6 +102,9 @@
     <div class="expense-details">
         <div class="main-amount">
             <span style="font-size: 24px; font-weight: bold;">{{.ExpenseDetails.Title}}</span>
+            {{if eq .ExpenseDetails.Status 0}}
+                <button onclick="location.href='/cancelexpense?expenseId={{.ExpenseDetails.ExpenseId}}'" class="cancel-button" style="float: right;">Cancel</button>
+            {{end}}
             {{if eq .ExpenseDetails.Paid 0}}
                 <a href="/markaspaid?expenseId={{.ExpenseDetails.ExpenseId}}"><button class="pay-button" style="float:right">Pay Now</button></a>
             {{end}}

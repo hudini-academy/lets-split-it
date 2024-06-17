@@ -106,20 +106,20 @@ h3 {
     font-weight: 100;
 }
 
-.split-link:hover .split-box {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 .split-box {
     border: 1px solid #ccc;
     border-radius: 30px;
     padding: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow */
+    background-color: #ffffff; /* Ensure background color matches */
 }
 
 .split-box:hover {
-    background-color: #f9f9f9;
+    background-color: #f9f9f9; /* Optional: Change background on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Optional: Increase shadow on hover */
 }
+
 
 .split-title {
     font-weight: bold;
@@ -149,6 +149,8 @@ h3 {
     color: #fff;
     margin-top: 5px;
     font-size: 12px;
+    text-align: center;
+
 }
 form {
     max-width: 600px;
@@ -216,3 +218,22 @@ input[type='submit']:hover {
     font-size: small;
 }
 
+.lowerDiv {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    margin-top: 5px;
+}
+
+.lowerDiv span {
+    flex: 1;
+    display: inline-block;
+    text-align: start;
+}
+
+.status-wrapper {
+    display: inline-block; 
+    border-radius: 5px; 
+    padding: 0px 5px;
+    margin-left: 5px; 
+}
