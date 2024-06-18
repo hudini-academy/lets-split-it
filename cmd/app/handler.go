@@ -296,3 +296,29 @@ func (app *Application) Cancelexpense(w http.ResponseWriter, r *http.Request) {
 	// redirect to the home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+// Allsplits retrieves and renders all splits that the user is involved in.
+func (app *Application) Allsplits(w http.ResponseWriter, r *http.Request) {
+	// Retrieve user ID from session
+	userId := app.Session.GetInt(r, "userId")
+
+	// Define template files to render
+	files := []string{
+		"ui/html/splitList.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
+	// Retrieve split transactions for the user
+	splitList, errFetchingSplitList := app.Expense.SplitList(userId)
+	if errFetchingSplitList != nil {
+		app.ErrorLog.Println(errFetchingSplitList.Error())
+		log.Println("Allsplits(): ", errFetchingSplitList)
+		return
+	}
+
+	// Render the page with split transactions, username
+	app.render(w, files, &templateData{
+		SplitTransaction: splitList,
+		TitleUserName:    app.Session.GetString(r, "userName"),
+	})
+}
