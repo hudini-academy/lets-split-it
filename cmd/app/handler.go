@@ -47,19 +47,55 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 
 // Login the user after authentication.
 func (app *Application) LoginUser(w http.ResponseWriter, r *http.Request) {
-	user := r.FormValue("email")
-	password := r.FormValue("password")
-
-	id, errAuth := app.User.Autenticate(user, password)
-	if errAuth != nil {
-		app.Session.Put(r, "flash", "Email or Password is incorrect")
-		app.ErrorLog.Println(errAuth)
-		log.Println(errAuth)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-	app.Session.Put(r, "userId", id)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+    // Define template files to render
+    files := []string{
+        "ui/html/login.page.tmpl",
+        "ui/html/base.layout.tmpl",
+    }
+ 
+    // Retrieve email and password from form values
+    user := r.FormValue("email")
+    password := r.FormValue("password")
+ 
+    // Validate email and password fields
+    if app.Validate(r, user, "email") || app.Validate(r, password, "Ispassword") {
+        flash := app.Session.PopString(r, "flash")
+        app.render(w, files, &templateData{
+            Flash: flash,
+            Email: user,
+        })
+        return
+    }
+ 
+    // Check if email exists in the database
+    exists, err := app.User.CheckEmail(user)
+    if err != nil {
+        app.ErrorLog.Println(err)
+        return
+    }
+ 
+    // Authenticate user with email and password
+    if exists {
+        id, userName, errAuth := app.User.Autenticate(user, password)
+        if errAuth != nil {
+            app.Session.Put(r, "flash", "Password is incorrect")
+            flash := app.Session.PopString(r, "flash")
+            app.render(w, files, &templateData{
+                Flash: flash,
+                Email: user,
+            })
+            app.ErrorLog.Println(errAuth)
+            log.Println(errAuth)
+            return
+        }
+        // Set session variables and redirect on successful authentication
+        app.Session.Put(r, "userId", id)
+        app.Session.Put(r, "userName", userName)
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+    } else {
+        app.Session.Put(r, "flash", "Email is incorrect")
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+    }
 }
 
 // AddUserForm renders the add user form.
