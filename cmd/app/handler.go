@@ -409,6 +409,7 @@ func (app *Application) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		app.Session.Put(r, "flash", "User deleted successfully")
 	} else if !successDeleted && err == nil {
 		app.Session.Put(r, "flash", "User is involved in a pending split. Cannot delete the user.")
+		log.Println("User is involved in a pending split. Cannot delete the user.")
 	}
 
 	// Redirect to all users page
