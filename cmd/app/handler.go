@@ -234,7 +234,7 @@ func (app *Application) AllUsers(w http.ResponseWriter, r *http.Request) {
 		"ui/html/allusers.page.tmpl",
 		"ui/html/base.layout.tmpl",
 	}
-
+	log.Println(app.Session.GetString(r, "flash"))
 	// Render the page with user list and flash message
 	app.render(w, files, &templateData{
 		UserList:      userlist,
@@ -401,16 +401,14 @@ func (app *Application) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.ErrorLog.Println(err.Error())
 		log.Println("DeleteUser(): ", err)
-		app.Session.Put(r, "Flash", "Testing.")
 		return
 	}
 
 	// Set appropriate flash message based on deletion success or involvement in splits
 	if successDeleted {
-		app.Session.Put(r, "Flash", "User deleted successfully")
+		app.Session.Put(r, "flash", "User deleted successfully")
 	} else if !successDeleted && err == nil {
-		app.Session.Put(r, "Flash", "User is involved in a pending split. Cannot delete the user.")
-		log.Println("User is involved in a pending split. Cannot delete the user.")
+		app.Session.Put(r, "flash", "User is involved in a pending split. Cannot delete the user.")
 	}
 
 	// Redirect to all users page
