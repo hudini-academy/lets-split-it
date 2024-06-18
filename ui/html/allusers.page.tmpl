@@ -12,6 +12,7 @@
     {{if ne .Flash ""}}
         <span style="color: red; font-size: 13px;">* {{.Flash}}</span>
     {{end}}
+    {{if .UserList}}
     <table style="width:90%; border-collapse: collapse; padding: 10px; text-align: center; margin: 0 auto;">
         <tr>
             <th style="border: 1px solid #dddddd; padding: 8px;">Name</th>
@@ -28,6 +29,9 @@
         </tr>
         {{end}}
     </table>
+    {{else}}
+    <p style="color: grey; font-size: 14px; letter-spacing: 3px; font-weight: 100; margin-top: 20px;">No users available . . !</p>
+    {{end}}
 </div>
 
 {{end}}
