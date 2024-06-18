@@ -66,3 +66,4 @@ func main() {
 	}
 	errorLog.Fatal(http.ListenAndServe(app.Config.Addr, app.routes()))
 }
+

@@ -463,4 +463,3 @@ func (app *Application) Allsplits(w http.ResponseWriter, r *http.Request) {
 		TitleUserName:    app.Session.GetString(r, "userName"),
 	})
 }
-
