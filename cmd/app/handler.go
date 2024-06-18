@@ -180,7 +180,7 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect to /adduser on success (to clear form)
-	http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+	http.Redirect(w, r, "/allusers", http.StatusSeeOther)
 }
 
 // Validate performs field validation based on field type.
