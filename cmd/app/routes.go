@@ -36,11 +36,9 @@ func (app *Application) routes() http.Handler {
 	mux.Get("/markaspaid", Auth.ThenFunc(app.MarkAsPaid))           // GET /markaspaid - Renders mark as paid page.
 	mux.Get("/allsplits", Auth.ThenFunc(app.Allsplits))             // GET /allsplits - Displays all splits.
 
-	// Serve static files.
 	fileServer := http.FileServer(http.Dir(app.Config.StaticDir))    // serve static files from configured directory.
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))     // Route to serve static files.
 	mux.Get("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir("./ui/images")))) // Route to serve images.
 
-	// Return the final middleware chain with the request multiplexer.
 	return middlewareChain.Then(mux)
 }
