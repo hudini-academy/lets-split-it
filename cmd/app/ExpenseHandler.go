@@ -14,7 +14,7 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing form", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Parse amount, note, and title from form values
 	amount := r.FormValue("amount")
 	note := r.FormValue("note")
@@ -34,7 +34,7 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 		return
 	}
-	
+
 	if title == "" {
 		app.Session.Put(r, "flash", "Title Required!")
 		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
