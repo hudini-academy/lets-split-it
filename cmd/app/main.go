@@ -11,13 +11,6 @@ import (
 	"github.com/golangcollege/sessions"
 )
 
-// Config holds the configuration settings.
-type Config struct {
-	Addr      string
-	StaticDir string
-	Dsn       string
-}
-
 // Application holds the application dependencies.
 type Application struct {
 	Config   *Config
@@ -25,8 +18,15 @@ type Application struct {
 	ErrorLog *log.Logger
 	Session  *sessions.Session
 	User     *mysql.UserModel
-	Expense *mysql.SplitModel
-	Split *mysql.SplitModel
+	Expense  *mysql.SplitModel
+	Split    *mysql.SplitModel
+}
+
+// Config holds the configuration settings.
+type Config struct {
+	Addr      string
+	StaticDir string
+	Dsn       string
 }
 
 func main() {
@@ -61,8 +61,8 @@ func main() {
 		ErrorLog: errorLog,
 		Session:  session,
 		User:     &mysql.UserModel{DB: db},
-		Expense: &mysql.SplitModel{DB:db},
-		Split: &mysql.SplitModel{DB:db},
+		Expense:  &mysql.SplitModel{DB: db},
+		Split:    &mysql.SplitModel{DB: db},
 	}
 	errorLog.Fatal(http.ListenAndServe(app.Config.Addr, app.routes()))
 }

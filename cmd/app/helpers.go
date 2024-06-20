@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"text/template"
+	"unicode/utf8"
 )
 
 // templateData holds data that is passed to templates for rendering HTML pages.
@@ -128,3 +130,32 @@ func (app *Application) isValidUser(r *http.Request, name string) bool {
 	return true
 }
 
+// Validate performs field validation based on field type.
+func (app *Application) Validate(r *http.Request, field string, fieldType string) bool {
+	switch fieldType {
+	case "name":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The name field is blank!")
+			return true
+		} else if utf8.RuneCountInString(field) > 100 {
+			app.Session.Put(r, "flash", "The name field is too long (maximum is 100 characters)!")
+			return true
+		}
+	case "email":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The email field is blank!")
+			return true
+		}
+	case "password":
+		if utf8.RuneCountInString(field) < 8 {
+			app.Session.Put(r, "flash", "The password is too short (minimum is 8 characters)!")
+			return true
+		}
+	case "Ispassword":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The password field is blank!")
+			return true
+		}
+	}
+	return false
+}

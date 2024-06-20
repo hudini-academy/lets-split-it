@@ -25,6 +25,7 @@
     <div style="display: flex;">
         <div style="width: 30%; padding: 50px;">
             <h2>Your Splits</h2>
+            {{if .YourSplit}}
             {{range .YourSplit}}
                 <div class="split-box">
                     <a style="text-decoration: none; color: black;" class="split-link" href="/expense_details?expenseId={{.ExpenseId}}">
@@ -33,7 +34,7 @@
                         <span class="split-amount">Rs: {{.Amount}}</span>
                         <span class="split-date">{{.Date.Format "02/01/2006"}}</span><br>
                         <span style="font-size: 12px; color: grey; font-style: italic;">Spent by {{.CreatedUserName}}</span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp;
-                        <span class="split-status" style="background-color: {{if or (eq .Status 0) (eq .Status 1)}}#fcbc19{{else if eq .Status 2}}grey{{else if eq .Status 3}}#ffcc00{{end}};">
+                        <span class="split-status" style="background-color: {{if or (eq .Status 0) (eq .Status 1)}}#fcbc19{{else if eq .Status 2}}grey{{else if eq .Status 3}}#2db518{{end}};">
                             {{if or (eq .Status 0) (eq .Status 1)}}Pending  {{else if eq .Status 2}}Cancelled{{else if eq .Status 3}}Completed{{end}}
                         </span>
                     </a>
@@ -42,9 +43,13 @@
                     {{end}}
                 </div>
             {{end}}
+            {{else}}
+            <p style="color: grey; font-size: 14px; letter-spacing: 3px; font-weight: 100; margin-top: 40px; text-align: center;">No Splits Created  . . !</p>
+            {{end}}
         </div>
         <div style="width: 50%; padding: 50px;">
             <h2>Splits needing your attention</h2>
+            {{if .Involved}}
             {{range .Involved}}
                 <div class="split-box">
                     <a style="text-decoration: none; color: black;" class="split-link" href="/expense_details?expenseId={{.ExpenseId}}">
@@ -58,6 +63,9 @@
                         </span>
                     </a>
                 </div>
+            {{end}}
+            {{else}}
+            <p style="color: grey; font-size: 14px; letter-spacing: 3px; font-weight: 100; margin-top: 40px; text-align: center;">No Pending Payments . . !</p>
             {{end}}
         </div>
     </div>

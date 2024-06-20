@@ -1,15 +1,22 @@
 {{template "base" .}}
 {{define "title"}}All Users{{end}}
 {{define "header"}}
-
     <div class="action-btns" style="float: right;">
         <button onclick="location.href='/adduser'">Add user</button>
     </div>
 {{end}}
 {{define "body"}}
  
-<div style="margin-top: 50px; text-align: center;">
+<div style="margin-top: 50px; text-align: center;"><br><br><br>
     <h2>Users</h2>
+    {{if eq .Flash "User Successfully created"}}
+        <span style="color: green; font-size: 13px;">* {{.Flash}}</span>
+        {{else if eq .Flash "User deleted successfully"}}
+        <span style="color: green; font-size: 13px;">* {{.Flash}}</span>
+    {{else if eq .Flash "User is involved in a pending split. Cannot delete the user."}}
+        <span style="color: red; font-size: 13px;">* {{.Flash}}</span>
+    {{end}}
+    {{if .UserList}}
     <table style="width:90%; border-collapse: collapse; padding: 10px; text-align: center; margin: 0 auto;">
         <tr>
             <th style="border: 1px solid #dddddd; padding: 8px;">Name</th>
@@ -26,6 +33,9 @@
         </tr>
         {{end}}
     </table>
+    {{else}}
+    <p style="color: grey; font-size: 14px; letter-spacing: 3px; font-weight: 100; margin-top: 20px;">No users available . . !</p>
+    {{end}}
 </div>
 
 {{end}}
