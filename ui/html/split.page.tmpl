@@ -2,15 +2,15 @@
 {{define "title"}}Split{{end}}
 {{define "header"}}
 <div class="action-btns" style="float: right;">
-        <button onclick="location.href='/logout'">Logout</button>
-    </div>
+    <button onclick="location.href='/logout'">Logout</button>
+</div>
 {{end}}
 {{define "body"}}
- 
+
 <style>
     form {
         max-width: 600px;
-        margin:20px auto;
+        margin: 20px auto;
         padding: 20px;
         border: 1px solid #ccc;
         border-radius: 5px;
@@ -31,7 +31,7 @@
         margin-bottom: 15px;
         border: 1px solid #ccc;
         border-radius: 5px;
-        box-sizing: border-box; 
+        box-sizing: border-box;
     }
 
     input[type='submit'] {
@@ -72,25 +72,24 @@
 <form action="/submit_expense" method="POST">
     <br><br>
     <label for="amount">Title:</label>
-    <input type="text" id="title" name="title">
+    <input type="text" id="title" name="title" value="{{.Title}}">
     <br><br>
     <label for="note">Description:</label>
-    <input type="text" id="note" name="note">
+    <input type="text" id="note" name="note" value="{{.Description}}">
     <br><br>
     <label for="amount">Amount:</label>
-    <input type="text" id="amount" name="amount">
+    <input type="text" id="amount" name="amount" value="{{.Amount}}">
     <label for="user">Select Users:</label>
     <br>
     {{range .UserData}}
-        <input type="checkbox" id="user{{.UserID}}" name="user[]" value="{{.UserID}}">
+        <input type="checkbox" id="user{{.UserID}}" name="user[]" value="{{.UserID}}" {{if index $.CheckedUsers .UserID}}checked{{end}}>
         <label for="user{{.UserID}}">{{.Name}}</label>
     {{end}}
+
     <br><br>
     {{if .Flash}}
     <label style="color: red;" for="amount">* {{.Flash}}</label>
     {{end}}
-    <input type="submit" value="Create" >
+    <input type="submit" value="Create">
 </form>
 {{end}}
-
-       

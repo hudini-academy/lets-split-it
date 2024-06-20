@@ -55,4 +55,3 @@ type ExpenseDetails struct {
 	Paid               int
 	Status             int
 }
-
