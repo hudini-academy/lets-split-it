@@ -209,6 +209,16 @@ func (app *Application) Validate(r *http.Request, field string, fieldType string
 			app.Session.Put(r, "flash", "The password field is blank!")
 			return true
 		}
+	case "title":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The Title field is blank!")
+			return true
+		}
+	case "amount":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The Amount field is blank!")
+			return true
+		}
 	}
 	return false
 }
@@ -245,6 +255,42 @@ func (app *Application) AllUsers(w http.ResponseWriter, r *http.Request) {
 
 // AddSplit handles adding a new split/expense to the database.
 func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"ui/html/split.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
+	amount := r.FormValue("amount")
+	note := r.FormValue("note")
+	title := r.FormValue("title")
+	usersSelected := r.Form["user[]"]
+
+	app.Validate(r, amount, "amount")
+	app.Validate(r, title, "title")
+	flash := app.Session.PopString(r, "flash")
+	userList, errGettingList := app.User.GetAllUsers()
+	if errGettingList != nil {
+		app.ErrorLog.Fatal()
+		return
+	}
+
+	checkedUsers := make(map[int]bool)
+	for _, id := range usersSelected {
+		userID, _ := strconv.Atoi(id)
+		checkedUsers[userID] = true
+	}
+
+	if app.Validate(r, amount, "amount") || app.Validate(r, title, "title") {
+		app.render(w, files, &templateData{
+			Flash:       flash,
+			Amount:      amount,
+			Title:       title,
+			Description: note,
+			UserData:    userList,
+			CheckedUsers: checkedUsers,
+
+		})
+	}
 	// Parse form values
 	err := r.ParseForm()
 	if err != nil {
@@ -253,28 +299,34 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if users are selected for the split
-	usersSelected := r.Form["user[]"]
 	if len(usersSelected) == 0 {
+		app.render(w, files, &templateData{
+			Flash:        flash,
+			Amount:       amount,
+			Title:        title,
+			Description:  note,
+			UserData:     userList,
+		})
+
 		app.Session.Put(r, "flash", "No participants selected!")
-		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 		return
 	}
 
 	// Parse amount, note, and title from form values
-	amount := r.FormValue("amount")
+
 	amountFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		app.Session.Put(r, "flash", "Invalid amount!")
-		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
-		return
-	}
-	note := r.FormValue("note")
-	title := r.FormValue("title")
+		app.render(w, files, &templateData{
+			Flash:       flash,
+			Title:       title,
+			Description: note,
+			UserData:    userList,
+			SelectedUsers: usersSelected,
+			CheckedUsers: checkedUsers,
 
-	// Validate title field
-	if title == "" {
-		app.Session.Put(r, "flash", "Title Required!")
-		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+		})
+
+		app.Session.Put(r, "flash", "Invalid amount!")
 		return
 	}
 
@@ -463,4 +515,3 @@ func (app *Application) Allsplits(w http.ResponseWriter, r *http.Request) {
 		TitleUserName:    app.Session.GetString(r, "userName"),
 	})
 }
-

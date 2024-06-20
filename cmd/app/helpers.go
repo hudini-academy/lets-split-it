@@ -23,7 +23,12 @@ type templateData struct {
 	Involved         []*models.Expense        // List of expenses where the user is involved
 	ExpenseDetails   *models.ExpenseDetails   // Details of a specific expense
 	SplitTransaction []*models.ExpenseDetails // Split history of the user.
-	TitleUserName    string                   // User name for the page title.
+	TitleUserName    string
+	Title            string // Display title content in create split page
+	Description      string // Display description in create split page
+	Amount           string // Display Amount in create split page
+	SelectedUsers    []string
+	CheckedUsers     map[int]bool
 }
 
 // LogFiles opens the log files for writing information and error messages.
@@ -55,6 +60,7 @@ func openDB(dsn string) (*sql.DB, error) {
 
 // render function renders the specified template files with the provided template data (td).
 func (app *Application) render(w http.ResponseWriter, files []string, td *templateData) {
+
 	ts, errParsingFiles := template.ParseFiles(files...)
 
 	// Check for any error while parsing template files.
@@ -73,6 +79,7 @@ func (app *Application) render(w http.ResponseWriter, files []string, td *templa
 		http.Error(w, "Internal Server error", 500)
 		return
 	}
+
 }
 
 // AuthenticatedUser checks whether the user is authenticated based on the session data.
@@ -127,4 +134,3 @@ func (app *Application) isValidUser(r *http.Request, name string) bool {
 	}
 	return true
 }
-
