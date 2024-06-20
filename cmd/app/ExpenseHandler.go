@@ -44,6 +44,7 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 			CheckedUsers: checkedUsers,
 
 		})
+		return
 	}
 	// Parse form values
 	err := r.ParseForm()
