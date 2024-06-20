@@ -9,7 +9,11 @@
  
 <div style="margin-top: 50px; text-align: center;"><br><br><br>
     <h2>Users</h2>
-    {{if ne .Flash ""}}
+    {{if eq .Flash "User Successfully created"}}
+        <span style="color: green; font-size: 13px;">* {{.Flash}}</span>
+        {{else if eq .Flash "User deleted successfully"}}
+        <span style="color: green; font-size: 13px;">* {{.Flash}}</span>
+    {{else if eq .Flash "User is involved in a pending split. Cannot delete the user."}}
         <span style="color: red; font-size: 13px;">* {{.Flash}}</span>
     {{end}}
     {{if .UserList}}

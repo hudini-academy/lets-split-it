@@ -36,8 +36,8 @@
         <input type='submit' value='Add'>
     </div>
     <div>
-    {{if .Flash}}
-        <div class="flash">{{.}}</div>
+      {{if ne .Flash ""}}
+        <span style="color: red; font-size: 13px;">* {{.Flash}}</span>
     {{end}}
 </div>
 </form>
