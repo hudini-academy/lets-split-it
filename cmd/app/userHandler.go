@@ -161,7 +161,7 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/adduser", http.StatusSeeOther)
+	http.Redirect(w, r, "/allusers", http.StatusSeeOther)
 }
 
 // Logout handles user logout by removing session data and redirecting to login page.
