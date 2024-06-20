@@ -9,35 +9,78 @@ import (
 
 // AddSplit handles adding a new split/expense to the database.
 func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"ui/html/split.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
+	amount := r.FormValue("amount")
+	note := r.FormValue("note")
+	title := r.FormValue("title")
+	usersSelected := r.Form["user[]"]
+
+	app.Validate(r, amount, "amount")
+	app.Validate(r, title, "title")
+	flash := app.Session.PopString(r, "flash")
+	userList, errGettingList := app.User.GetAllUsers()
+	if errGettingList != nil {
+		app.ErrorLog.Fatal()
+		return
+	}
+
+	checkedUsers := make(map[int]bool)
+	for _, id := range usersSelected {
+		userID, _ := strconv.Atoi(id)
+		checkedUsers[userID] = true
+	}
+
+	if app.Validate(r, amount, "amount") || app.Validate(r, title, "title") {
+		app.render(w, files, &templateData{
+			Flash:       flash,
+			Amount:      amount,
+			Title:       title,
+			Description: note,
+			UserData:    userList,
+			CheckedUsers: checkedUsers,
+
+		})
+	}
+	// Parse form values
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusInternalServerError)
 		return
 	}
 
-	// Parse amount, note, and title from form values
-	amount := r.FormValue("amount")
-	note := r.FormValue("note")
-	title := r.FormValue("title")
-
 	// Check if users are selected for the split
-	usersSelected := r.Form["user[]"]
 	if len(usersSelected) == 0 {
+		app.render(w, files, &templateData{
+			Flash:        flash,
+			Amount:       amount,
+			Title:        title,
+			Description:  note,
+			UserData:     userList,
+		})
+
 		app.Session.Put(r, "flash", "No participants selected!")
-		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
 		return
 	}
+
+	// Parse amount, note, and title from form values
 
 	amountFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		app.Session.Put(r, "flash", "Invalid amount!")
-		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
-		return
-	}
+		app.render(w, files, &templateData{
+			Flash:       flash,
+			Title:       title,
+			Description: note,
+			UserData:    userList,
+			SelectedUsers: usersSelected,
+			CheckedUsers: checkedUsers,
 
-	if title == "" {
-		app.Session.Put(r, "flash", "Title Required!")
-		http.Redirect(w, r, "/submit_expense", http.StatusSeeOther)
+		})
+
+		app.Session.Put(r, "flash", "Invalid amount!")
 		return
 	}
 
@@ -58,8 +101,10 @@ func (app *Application) AddSplit(w http.ResponseWriter, r *http.Request) {
 	// Insert splits associated with the expense
 	app.Expense.Insert2Split(expenseId, amountFloat, usersSelected, app.Session.GetInt(r, "userId"))
 
+	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
 
 // GetAddSplitForm retrieves and renders the form to add a new split/expense.
 func (app *Application) GetAddSplitForm(w http.ResponseWriter, r *http.Request) {

@@ -163,6 +163,16 @@ func (app *Application) Validate(r *http.Request, field string, fieldType string
 			app.Session.Put(r, "flash", "The password field is blank!")
 			return true
 		}
+	case "title":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The Title field is blank!")
+			return true
+		}
+	case "amount":
+		if strings.TrimSpace(field) == "" {
+			app.Session.Put(r, "flash", "The Amount field is blank!")
+			return true
+		}
 	}
 	return false
 }
