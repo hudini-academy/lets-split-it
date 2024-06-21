@@ -2,9 +2,6 @@
 {{define "title"}}HOME{{end}}
 {{define "header"}}
     <div class="action-btns" style="float: right;">
-        <button onclick="location.href='/logout'">Logout</button>
-    </div>
-    <div class="action-btns" style="float: right;">
         <button onclick="location.href='submit_expense'">Create Split</button>
     </div>
     {{if eq .UserId 1}}
