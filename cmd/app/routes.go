@@ -36,6 +36,8 @@ func (app *Application) routes() http.Handler {
 	mux.Get("/cancelexpense", Auth.ThenFunc(app.Cancelexpense))    // GET /cancelexpense - Renders cancel expense page.
 	mux.Get("/markaspaid", Auth.ThenFunc(app.MarkAsPaid))          // GET /markaspaid - Renders mark as paid page.
 	mux.Get("/allsplits", Auth.ThenFunc(app.Allsplits))            // GET /allsplits - Displays all splits.
+	mux.Get("/changePassword", Auth.ThenFunc(app.ChangePasswordForm)) // GET /changepassword - Render change password page.
+	mux.Post("/changePassword", Auth.ThenFunc(app.ChangePassword)) //POST /changepassword - Changes the user password.
 
 	fileServer := http.FileServer(http.Dir(app.Config.StaticDir))                               // serve static files from configured directory.
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))                                // Route to serve static files.

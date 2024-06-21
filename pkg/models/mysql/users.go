@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"expense/pkg/models"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -177,4 +176,36 @@ func (m *UserModel) Delete(id int) (bool, error) {
 		return false, err
 	}
 	return rowsAffected > 0, nil
+}
+
+// ChangePassword updates the password of the user.
+
+// Parameters:
+// userId - The id of the user.
+// newPassword - The new password.
+
+// Returns: true if the user is deleted, false otherwise and an error, if any.
+func (m *UserModel) ChangePassword(userId int, currentPassword, newPassword string) (bool, error) {
+	var passwordFromDb []byte
+	stmt := `SELECT password FROM user WHERE userId = ?`
+	row := m.DB.QueryRow(stmt, userId)
+	row.Scan(&passwordFromDb)
+	err := bcrypt.CompareHashAndPassword(passwordFromDb, []byte(currentPassword))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return false, models.ErrInvalidCredentials
+	} else if err != nil {
+		return false, err
+	}
+	hashedpassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return false, err
+	}
+	stmt = `UPDATE user SET password = ?  WHERE userId = ?`
+
+	_, err = m.DB.Exec(stmt, hashedpassword, userId)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

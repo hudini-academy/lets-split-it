@@ -1,8 +1,10 @@
 package main
 
 import (
+	"expense/pkg/models"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Home renders the home page of the application.
@@ -190,4 +192,69 @@ func (app *Application) AllUsers(w http.ResponseWriter, r *http.Request) {
 		Flash:         app.Session.PopString(r, "flash"),
 		TitleUserName: app.Session.GetString(r, "userName"),
 	})
+}
+
+// Change the user password form.
+func (app *Application) ChangePasswordForm(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"ui/html/changepassword.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
+	app.render(w, files, &templateData{
+		Flash:         app.Session.PopString(r, "flash"),
+		TitleUserName: app.Session.GetString(r, "userName"),
+	})
+}
+
+// Change the user password.
+func (app *Application) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	userId := app.Session.GetInt(r, "userId")
+	current := r.FormValue("current")
+	new := strings.TrimSpace(r.FormValue("new"))
+	confirm := strings.TrimSpace(r.FormValue("confirm"))
+
+	files := []string{
+		"ui/html/changepassword.page.tmpl",
+		"ui/html/base.layout.tmpl",
+	}
+
+	if confirm != new {
+		app.render(w, files, &templateData{
+			Flash:           "Password Mismatch",
+			TitleUserName:   app.Session.GetString(r, "userName"),
+			CurrentPassword: current,
+		})
+		return
+	}
+
+	if app.Validate(r, new, "password") {
+		app.render(w, files, &templateData{
+			Flash:           app.Session.GetString(r, "flash"),
+			TitleUserName:   app.Session.GetString(r, "userName"),
+			CurrentPassword: current,
+		})
+		return
+	}
+
+	_, err := app.User.ChangePassword(userId, current, new)
+	if err == models.ErrInvalidCredentials {
+		log.Println(err)
+        app.render(w, files, &templateData{
+            Flash:           "Incorrect current password",
+            TitleUserName:   app.Session.GetString(r, "userName"),
+            CurrentPassword: current,
+        })
+		return
+	} else if err != nil {
+		app.ErrorLog.Println(err)
+		return
+	}
+
+
+	app.render(w, files, &templateData{
+		Flash:         "Password Change successful",
+		TitleUserName: app.Session.GetString(r, "userName"),
+	})
+
 }

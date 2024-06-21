@@ -31,6 +31,7 @@ type templateData struct {
 	Amount           string // Display Amount in create split page
 	SelectedUsers    []string
 	CheckedUsers     map[int]bool
+	CurrentPassword  string
 }
 
 // LogFiles opens the log files for writing information and error messages.

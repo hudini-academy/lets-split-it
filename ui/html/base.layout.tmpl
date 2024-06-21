@@ -1,28 +1,62 @@
 {{define "base"}}
 <!doctype html>
 <html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <title>{{block "title" .}}{{end}}</title>
-        <link rel='stylesheet' href='/static/css/main.css'>
-    </head>
+<head>
+    <meta charset='utf-8'>
+    <title>{{block "title" .}}{{end}}</title>
+    <link rel='stylesheet' href='/static/css/main.css'>
+    <style>
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {background-color: #f1f1f1}
+        .dropdown:hover .dropdown-content {display: block;}
+    </style>
+</head>
+<body>
     <div style="background-color: #fff; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; z-index: 999;">
-    <div class="action-btns" style="float: left;">
-        <a href="/"><img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;"></a>
-    </div>
-    {{if ne .TitleUserName ""}}
         <div class="action-btns" style="float: left;">
-        
-            <h3 style="font-size: 17px; letter-spacing: 4px; padding-top: 15px;" >Hey, {{.TitleUserName}}!</h3>
+            <a href="/"><img src="/images/lets-split-logo.png" alt="Logo image" style="width: 130px; height: 50px; padding-left: 40px;"></a>
         </div>
-    {{end}}
-    {{template "header" .}}
-    <div style="clear: both;"></div>
-</div>
-    <body>
-        <section>
-            {{block "body" .}}{{end}}
-        </section>
-    </body>
+        {{if ne .TitleUserName ""}}
+        <div class="dropdown" style="float: left; position: relative; ">
+            <button class="dropbtn" style="color: #696762; background-color: white; font-size: 17px; letter-spacing: 4px; padding-top: 15px; border: none;">Hey {{.TitleUserName}} !</button>
+            <div class="dropdown-content">
+                <a href="/changePassword" style="font-size: 15px; color: #696762;">Change Password</a>
+            </div>
+        </div>
+        {{end}}
+        {{template "header" .}}
+        <div style="clear: both;"></div>
+    </div>
+
+    <section>
+        {{block "body" .}}{{end}}
+    </section>
+
+    <!-- Optional: JavaScript for dropdown functionality -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var dropdowns = document.getElementsByClassName("dropdown");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var dropdown = dropdowns[i];
+                dropdown.addEventListener("click", function() {
+                    this.getElementsByClassName("dropdown-content")[0].classList.toggle("show");
+                });
+            }
+        });
+    </script>
+</body>
 </html>
 {{end}}
