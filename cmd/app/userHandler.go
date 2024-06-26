@@ -1,10 +1,12 @@
 package main
 
 import (
+	"expense/pkg/jwt"
 	"expense/pkg/models"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Home renders the home page of the application.
@@ -92,6 +94,28 @@ func (app *Application) LoginUser(w http.ResponseWriter, r *http.Request) {
 		// Set session variables and redirect on successful authentication
 		app.Session.Put(r, "userId", id)
 		app.Session.Put(r, "userName", userName)
+
+		// Set authentication token.
+		token, err := jwt.GenerateToken(user)
+		if err != nil {
+			app.ErrorLog.Println(err)
+			log.Println(err)
+		}
+		w.Header().Set("Authorization", token)
+
+		expiration := time.Now().Add(24 * time.Hour) // Cookie expires in 24 hours
+		cookie := &http.Cookie{
+			Name:     "authToken",
+			Value:    token, // Token should be dynamically generated in a real application
+			Expires:  expiration,
+			HttpOnly: true,                    // Prevents access to the cookie via client-side script
+			Secure:   true,                    // Ensures the cookie is sent over HTTPS only
+			SameSite: http.SameSiteStrictMode, // Prevents the browser from sending this cookie along with cross-site requests
+		}
+
+		// Set the cookie in the response
+		http.SetCookie(w, cookie)
+
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
 		app.Session.Put(r, "flash", "Email is incorrect")
@@ -168,6 +192,18 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 
 // Logout handles user logout by removing session data and redirecting to login page.
 func (app *Application) Logout(w http.ResponseWriter, r *http.Request) {
+	expiredCookie := &http.Cookie{
+        Name:     "authToken",
+        Value:    "",
+        Expires:  time.Unix(0, 0), // Set the expiration to Unix epoch start, effectively deleting it
+        HttpOnly: true,
+        Secure:   true,
+        SameSite: http.SameSiteStrictMode,
+    }
+ 
+    // Set the expired cookie in the response to overwrite the existing one
+    http.SetCookie(w, expiredCookie)
+	
 	app.Session.Remove(r, "userId")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
@@ -240,17 +276,16 @@ func (app *Application) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	_, err := app.User.ChangePassword(userId, current, new)
 	if err == models.ErrInvalidCredentials {
 		log.Println(err)
-        app.render(w, files, &templateData{
-            Flash:           "Incorrect current password",
-            TitleUserName:   app.Session.GetString(r, "userName"),
-            CurrentPassword: current,
-        })
+		app.render(w, files, &templateData{
+			Flash:           "Incorrect current password",
+			TitleUserName:   app.Session.GetString(r, "userName"),
+			CurrentPassword: current,
+		})
 		return
 	} else if err != nil {
 		app.ErrorLog.Println(err)
 		return
 	}
-
 
 	app.render(w, files, &templateData{
 		Flash:         "Password Change successful",
