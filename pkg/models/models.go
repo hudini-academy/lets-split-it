@@ -56,9 +56,10 @@ type ExpenseDetails struct {
 	Status             int
 }
 
-type SplitAmount struct {
+type SplitAmount34 struct {
 	Amount int
 	DatePaid string
+	SPLIT string
 }
 
 type NewFeature3 struct {
