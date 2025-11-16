@@ -60,3 +60,8 @@ type SplitAmount struct {
 	Amount int
 	DatePaid string
 }
+
+type NewFeature3 struct {
+	Name string
+	Age int
+}
