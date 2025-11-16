@@ -55,3 +55,8 @@ type ExpenseDetails struct {
 	Paid               int
 	Status             int
 }
+
+type SplitAmount struct {
+	Amount int
+	DatePaid string
+}
