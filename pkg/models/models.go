@@ -65,3 +65,8 @@ type NewFeature3 struct {
 	Name string
 	Age int
 }
+
+type NewFeature4 struct {
+	Name string
+	Age int
+}
